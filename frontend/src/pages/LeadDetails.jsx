@@ -80,7 +80,7 @@ export default function LeadDetails() {
 
   const updateProductStatus = (productId, newStatus) => {
     const currentProducts = products || lead.products || []
-    const updatedProducts = currentProducts.map(p => 
+    const updatedProducts = currentProducts.map(p =>
       p.id === productId ? { ...p, status: newStatus } : p
     )
     patchMutation.mutate({ products: updatedProducts })
@@ -112,6 +112,7 @@ export default function LeadDetails() {
   if (isLoading) return <div>Loading…</div>
   if (!lead) return <div>Not found</div>
 
+
   return (
     <div className="space-y-6 animate-in-up">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -134,6 +135,7 @@ export default function LeadDetails() {
             <Row label="Expected Value"><span className="font-medium">{(lead.expected_value ?? 0).toLocaleString()}</span></Row>
             <Row label="Source"><span>{lead.source || '-'}</span></Row>
             <Row label="Next Followup"><span>{lead.next_followup_at ? new Date(lead.next_followup_at).toLocaleString() : '-'}</span></Row>
+            <Row label="Project"><span>{lead.project_name || '-'}</span></Row>
             <Row label="Assigned To"><span>{lead.assigned_to ? nameOf(lead.assigned_to) : 'UNASSIGNED'}</span></Row>
             <Row label="Assigned By"><span>{lead.assigned_by ? nameOf(lead.assigned_by) : '-'}</span></Row>
             <Row label="Assigned At"><span>{lead.assigned_at ? new Date(lead.assigned_at).toLocaleString() : '-'}</span></Row>
@@ -266,59 +268,59 @@ export default function LeadDetails() {
           </div>
         </Panel>
 
-        
 
-       <Panel title="Audit Log">
-  <div className="space-y-5">
-    {(audit || []).map((a) => (
-      <div
-        key={a._id}
-        className="group bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
-            <div className="mt-1.5 w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-blue-100" />
 
-            <div>
-              <div className="text-sm font-semibold text-slate-900">
-                {a.action}
+        <Panel title="Audit Log">
+          <div className="space-y-5">
+            {(audit || []).map((a) => (
+              <div
+                key={a._id}
+                className="group bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1.5 w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-blue-100" />
+
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">
+                        {a.action}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        by{" "}
+                        <span className="font-medium text-slate-700">
+                          {nameOf(a.actor_id)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
+                    {new Date().toLocaleDateString()}{" "}
+                    {new Date().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+
+                {/* Diff */}
+                <AuditDiff before={a.before || {}} after={a.after || {}} />
               </div>
-              <div className="text-xs text-slate-500 mt-1">
-                by{" "}
-                <span className="font-medium text-slate-700">
-                  {nameOf(a.actor_id)}
-                </span>
+            ))}
+
+            {(audit || []).length === 0 && (
+              <div className="py-14 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+                <div className="text-sm font-medium text-slate-600">
+                  No audit activity
+                </div>
+                <div className="text-xs text-slate-400 mt-1">
+                  Changes will appear here
+                </div>
               </div>
-            </div>
+            )}
           </div>
-
-         <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
-  {new Date().toLocaleDateString()}{" "}
-  {new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  })}
-</div>
-        </div>
-
-        {/* Diff */}
-        <AuditDiff before={a.before || {}} after={a.after || {}} />
-      </div>
-    ))}
-
-    {(audit || []).length === 0 && (
-      <div className="py-14 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50">
-        <div className="text-sm font-medium text-slate-600">
-          No audit activity
-        </div>
-        <div className="text-xs text-slate-400 mt-1">
-          Changes will appear here
-        </div>
-      </div>
-    )}
-  </div>
-</Panel>
+        </Panel>
       </div>
 
       <FollowupModal open={!!openFU} onClose={() => setOpenFU(null)} onSubmit={(payload) => addFollowup.mutate(payload)} products={products || []} leadId={id} qc={qc} productId={openFU?.productId} />
@@ -375,33 +377,33 @@ function NextActions({ lead, onChange, onProb }) {
         {(lead.next_actions || []).length === 0 && <div className="text-slate-500">No actions yet.</div>}
       </div>
       <div>
-  {/* Header */}
-  <div className="flex items-center justify-between mb-2">
-    <span className="text-xs text-slate-500 font-medium">
-      Win Probability
-    </span>
-    <span className="text-sm font-semibold text-emerald-600">
-      {prob}%
-    </span>
-  </div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-slate-500 font-medium">
+            Win Probability
+          </span>
+          <span className="text-sm font-semibold text-emerald-600">
+            {prob}%
+          </span>
+        </div>
 
-  {/* Slider with background fill */}
-  <div className="relative">
-    <input
-      type="range"
-      min={0}
-      max={100}
-      value={prob ?? 0}
-      onChange={(e) => handleProbChange(Number(e.target.value))}
-      aria-label="Win Probability"
-      className="relative w-full h-2 rounded-lg appearance-none cursor-pointer 
+        {/* Slider with background fill */}
+        <div className="relative">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={prob ?? 0}
+            onChange={(e) => handleProbChange(Number(e.target.value))}
+            aria-label="Win Probability"
+            className="relative w-full h-2 rounded-lg appearance-none cursor-pointer 
                  bg-slate-200 accent-emerald-500"
-      style={{
-        background: `linear-gradient(to right, rgb(16 185 129) 0%, rgb(16 185 129) ${prob}%, rgb(226 232 240) ${prob}%, rgb(226 232 240) 100%)`
-      }}
-    />
-  </div>
-</div>
+            style={{
+              background: `linear-gradient(to right, rgb(16 185 129) 0%, rgb(16 185 129) ${prob}%, rgb(226 232 240) ${prob}%, rgb(226 232 240) 100%)`
+            }}
+          />
+        </div>
+      </div>
     </div>
   )
 }
@@ -489,11 +491,10 @@ function DiffBox({ label, value, type }) {
       </span>
 
       <div
-        className={`flex-1 px-3 py-2 rounded-lg border text-xs leading-relaxed ${
-          isBefore
-            ? "bg-red-50 border-red-100 text-red-700"
-            : "bg-emerald-50 border-emerald-100 text-emerald-700"
-        }`}
+        className={`flex-1 px-3 py-2 rounded-lg border text-xs leading-relaxed ${isBefore
+          ? "bg-red-50 border-red-100 text-red-700"
+          : "bg-emerald-50 border-emerald-100 text-emerald-700"
+          }`}
       >
         {renderDiffValue(value)}
       </div>

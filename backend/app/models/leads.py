@@ -75,6 +75,7 @@ class BulkStageRequest(BaseModel):
 
 class LeadOut(LeadBase):
     lead_id: str
+    project_name: Optional[str] = None
     assigned_to: Optional[str] = None
     assigned_by: Optional[str] = None
     assigned_at: Optional[datetime] = None

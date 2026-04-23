@@ -2,7 +2,7 @@
 from fastapi import FastAPI, HTTPException
 from typing import List, Optional
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field
 
@@ -17,8 +17,8 @@ class ProductCreate(BaseModel):
     is_active: bool = False
     price: float = Field(ge=0)
     created_by: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = datetime.now(timezone.utc)
+    updated_at: datetime = datetime.now(timezone.utc)
 
 
 
@@ -30,7 +30,7 @@ class ProductUpdate(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class ProductOut(BaseModel):
-    project_id: str   
+    project_id: str  
     name: str
     description: Optional[str] = None
     is_active: bool

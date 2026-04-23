@@ -88,11 +88,30 @@ async def export_csv(
     return Response(content=output.getvalue(), media_type="text/csv")
 
 @router.get("/{lead_id}", response_model=LeadOut)
-async def get_lead(lead_id: str, db=Depends(get_db), user=Depends(get_current_user)):
+async def get_lead(
+    lead_id: str,
+    db=Depends(get_db),
+    user=Depends(get_current_user)
+):
+    # Get lead
     lead = await db.leads.find_one({"lead_id": lead_id})
+    
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
+
     ensure_can_view(user, lead)
+
+    # Get project name using project_id
+    if lead.get("project_id"):
+        project = await db.products.find_one(
+            {"project_id": lead["project_id"]},
+            {"_id": 0, "name": 1}
+        )
+
+        lead["project_name"] = project["name"] if project else None
+    else:
+        lead["project_name"] = None
+
     return lead
 
 @router.patch("/{lead_id}", response_model=LeadOut)
