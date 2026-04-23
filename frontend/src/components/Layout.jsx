@@ -11,6 +11,7 @@ export default function Layout({ children }) {
   const { user, clear } = useAuthStore()
   const nav = useNavigate()
   const isManager = user?.role === 'MANAGER'
+  const isAdmin = user?.role === 'ADMIN'
   const [term, setTerm] = useState('')
   const goSearch = () => {
     const t = term.trim()
@@ -36,16 +37,31 @@ export default function Layout({ children }) {
         <div className="text-xs text-slate-500 mt-1">Role: {user?.role}</div>
         <nav className="mt-6 space-y-1 animate-in-up">
           <NavLink to="/" className={linkClass}><LayoutDashboard size={16} /> Dashboard</NavLink>
-          <NavLink to="/leads" className={linkClass}><List size={16} /> Leads</NavLink>
-          <NavLink to="/kanban" className={linkClass}><KanbanSquare size={16} /> Kanban</NavLink>
+
+          {/* Admin-only links */}
+          {isAdmin && (
+            <>
+              <NavLink to="/leads" className={linkClass}><List size={16} /> All Leads</NavLink>
+            </>
+          )}
+
+          {/* Manager & Sales links */}
+          {!isAdmin && (
+            <>
+              <NavLink to="/leads" className={linkClass}><List size={16} /> Leads</NavLink>
+              <NavLink to="/kanban" className={linkClass}><KanbanSquare size={16} /> Kanban</NavLink>
+            </>
+          )}
+
           {isManager && <NavLink to="/projects" className={linkClass}><SquareActivity size={16} /> Projects</NavLink>}
           {isManager && <NavLink to="/analytics" className={linkClass}><TrendingUp size={16} /> Analytics</NavLink>}
           {isManager && <NavLink to="/team" className={linkClass}><Users2 size={16} /> Team Performance</NavLink>}
           {isManager && <NavLink to="/revenue" className={linkClass}><Banknote size={16} /> Revenue</NavLink>}
-          <NavLink to="/views" className={linkClass}><Bookmark size={16} /> Saved Views</NavLink>
-          <NavLink to="/invoices" className={linkClass}><Banknote size={16} /> Invoices</NavLink>
+
+          {!isAdmin && <NavLink to="/views" className={linkClass}><Bookmark size={16} /> Saved Views</NavLink>}
+          {!isAdmin && <NavLink to="/invoices" className={linkClass}><Banknote size={16} /> Invoices</NavLink>}
           
-          {!isManager && <NavLink to="/achievements" className={linkClass}><Medal size={16} /> Achievements</NavLink>}
+          {(!isManager && !isAdmin) && <NavLink to="/achievements" className={linkClass}><Medal size={16} /> Achievements</NavLink>}
           <NavLink to="/profile" className={linkClass}><UserCircle2 size={16} /> My Profile</NavLink>
           <NavLink to="/settings" className={linkClass}><Settings size={16} /> Settings</NavLink>
         </nav>

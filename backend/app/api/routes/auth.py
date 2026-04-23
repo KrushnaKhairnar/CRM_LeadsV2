@@ -35,5 +35,5 @@ async def register(payload: UserCreate, db=Depends(get_db), user=Depends(require
     existing = await repo.get_by_username(payload.username)
     if existing:
         raise HTTPException(status_code=409, detail="Username already exists")
-    uid = await repo.create(payload.username, payload.password, payload.role)
+    uid = await repo.create(payload.username, payload.password, payload.role, created_by=user["user_id"])
     return {"id": uid}

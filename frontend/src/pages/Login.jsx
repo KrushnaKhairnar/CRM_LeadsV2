@@ -15,7 +15,7 @@ const schema = z.object({
 
 export default function Login() {
   const nav = useNavigate()
-  const setToken = useAuthStore(s => s.setToken)
+  const setToken = useAuthStore(s => s.token)
   const setUser = useAuthStore(s => s.setUser)
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
@@ -26,9 +26,9 @@ export default function Login() {
   const onSubmit = async (values) => {
     try {
       const t = await AuthAPI.login(values)
-      setToken(t.access_token)
+      useAuthStore.getState().setToken(t.access_token)
       const me = await AuthAPI.me()
-      setUser(me)
+      useAuthStore.getState().setUser(me)
       toast.success('Logged in')
       nav('/')
     } catch (e) {
@@ -44,7 +44,7 @@ export default function Login() {
       <div className="w-full max-w-lg bg-white/60 backdrop-blur-xl border border-white/50 rounded-3xl shadow-card p-8 animate-in-pop">
         <div className="text-center">
           <div className="text-3xl font-semibold tracking-tight">Good to see you again</div>
-          <div className="text-sm text-slate-500 mt-1">Login with demo: manager1 / sales1 / sales2</div>
+          <div className="text-sm text-slate-500 mt-1">Login: admin / manager1 / sales1 / sales2</div>
         </div>
 
         <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>

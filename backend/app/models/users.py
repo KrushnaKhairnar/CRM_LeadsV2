@@ -14,6 +14,7 @@ class UserPublic(BaseModel):
     user_id: str
     username: str
     role: Role
+    created_by: Optional[str] = None
     created_at: datetime
 
 class LoginRequest(BaseModel):
@@ -28,6 +29,7 @@ class MeResponse(BaseModel):
     user_id: str
     username: str
     role: Role
+    created_by: Optional[str] = None
     full_name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None

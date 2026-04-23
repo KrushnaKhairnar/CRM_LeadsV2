@@ -115,7 +115,7 @@ class LeadsService:
         role = user["role"]
         uid = user["user_id"]
 
-        if role == "MANAGER":
+        if role in ("MANAGER", "ADMIN"):
             q = filters if filters else {}
         else:
             access_scope = {"$or": [{"assigned_to": uid}, {"created_by": uid}]}

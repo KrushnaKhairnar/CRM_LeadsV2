@@ -3,10 +3,13 @@ import { api } from "./client";
 export const AuthAPI = {
   login: (payload) => api.post("/auth/login", payload).then((r) => r.data),
   me: () => api.get("/auth/me").then((r) => r.data),
+  register: (payload) => api.post("/auth/register", payload).then((r) => r.data),
 };
 
 export const UsersAPI = {
   listSales: () => api.get("/users").then((r) => r.data),
+  listManagers: () => api.get("/users/managers").then((r) => r.data),
+  myTeam: () => api.get("/users/my-team").then((r) => r.data),
   me: () => api.get("/users/me").then((r) => r.data),
   updateMe: (payload) => api.patch("/users/me", payload).then((r) => r.data),
   lookup: (ids) =>

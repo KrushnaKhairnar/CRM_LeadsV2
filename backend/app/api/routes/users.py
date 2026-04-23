@@ -6,10 +6,43 @@ from app.models.users import UserProfileUpdate
 
 router = APIRouter()
 
+@router.get("/managers", response_model=list)
+async def list_managers(db=Depends(get_db), user=Depends(require_roles([Roles.ADMIN]))):
+    """Admin-only: list all manager accounts."""
+    repo = UsersRepository(db)
+    managers = await repo.list_managers()
+    return [
+        {
+            "user_id": u.get("user_id"),
+            "username": u.get("username"),
+            "role": u.get("role"),
+            "created_by": u.get("created_by"),
+            "created_at": u.get("created_at"),
+        }
+        for u in managers
+    ]
+
+@router.get("/my-team", response_model=list)
+async def list_my_team(db=Depends(get_db), user=Depends(require_roles([Roles.MANAGER]))):
+    """Manager-only: list sales users created by the current manager."""
+    repo = UsersRepository(db)
+    users = await repo.list_sales_for_manager(user["user_id"])
+    return [
+        {
+            "user_id": u.get("user_id"),
+            "username": u.get("username"),
+            "role": u.get("role"),
+            "created_by": u.get("created_by"),
+            "created_at": u.get("created_at"),
+        }
+        for u in users
+    ]
+
 @router.get("", response_model=list)
 async def list_sales_users(db=Depends(get_db), user=Depends(require_roles([Roles.MANAGER]))):
     repo = UsersRepository(db)
-    users = await repo.list_sales()
+    # Scope to only sales users created by this manager
+    users = await repo.list_sales_for_manager(user["user_id"])
     return [
         {
             "user_id": u.get("user_id"),

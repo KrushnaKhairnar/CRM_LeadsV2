@@ -1,16 +1,21 @@
 import React, { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnalyticsAPI, LeadsAPI } from '../api/endpoints'
 import { PieChart, Pie, Cell, Tooltip, AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Legend, BarChart, Bar } from 'recharts'
 import { UsersAPI } from '../api/endpoints'
 import { Link } from 'react-router-dom'
+import RegisterUserModal from './components/RegisterUserModal'
+import { UserPlus } from 'lucide-react'
 
 export default function ManagerDashboard() {
+  const qc = useQueryClient()
   const [days, setDays] = useState(30)
+  const [openRegister, setOpenRegister] = useState(false)
   const { data } = useQuery({ queryKey: ['analytics-manager', days], queryFn: () => AnalyticsAPI.manager({ days }) })
   const { data: leads } = useQuery({ queryKey: ['leads', { page: 1 }], queryFn: () => LeadsAPI.list({ page: 1, page_size: 10, sort_by: 'updated_at' }) })
   const { data: rev } = useQuery({ queryKey: ['rev-manager', days], queryFn: () => AnalyticsAPI.revenueManager({ days }) })
   const { data: users } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales() })
+  const { data: myTeam } = useQuery({ queryKey: ['my-team'], queryFn: () => UsersAPI.myTeam() })
 
   const statusData = useMemo(() => {
     const m = data?.by_status || {}
@@ -32,19 +37,28 @@ export default function ManagerDashboard() {
 
   return (
     <div className="space-y-6 animate-in-up">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="text-2xl font-semibold tracking-tight">Manager Dashboard</div>
           <div className="text-sm text-slate-500">Overview and team performance</div>
         </div>
-        <select className="text-sm" value={days} onChange={e => setDays(Number(e.target.value))}>
-          <option value={7}>Last 7 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
-        </select>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setOpenRegister(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 text-white hover:from-brand-700 hover:to-accent-700 text-sm shadow-soft hover:shadow-hover transition"
+          >
+            <UserPlus size={16} /> Register Sales Person
+          </button>
+          <select className="text-sm" value={days} onChange={e => setDays(Number(e.target.value))}>
+            <option value={7}>Last 7 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+          </select>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid md:grid-cols-5 gap-4">
+        <Card title="My Sales Team" value={myTeam?.length ?? '-'} />
         <Card title="Total Leads" value={data?.total_leads ?? '-'} />
         <Card title="Overdue Followups" value={data?.overdue_followups ?? '-'} />
         <Card title="Today's Followups" value={data?.today_followups ?? '-'} />
@@ -147,6 +161,16 @@ export default function ManagerDashboard() {
           </table>
         </div>
       </Panel>
+
+      <RegisterUserModal
+        open={openRegister}
+        onClose={() => setOpenRegister(false)}
+        role="SALES"
+        onCreated={() => {
+          qc.invalidateQueries({ queryKey: ['my-team'] })
+          qc.invalidateQueries({ queryKey: ['sales-users'] })
+        }}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { useAuthStore } from '../auth/store'
 import { AuthAPI } from '../api/endpoints'
 import ManagerDashboard from '../pages/ManagerDashboard.jsx'
 import SalesDashboard from '../pages/SalesDashboard.jsx'
+import AdminDashboard from '../pages/AdminDashboard.jsx'
 import LeadsList from '../pages/LeadsList.jsx'
 import LeadDetails from '../pages/LeadDetails.jsx'
 import Products from '../pages/projects.jsx'
@@ -49,7 +50,7 @@ export default function App() {
       <Route path="/" element={
         <ProtectedRoute>
           <Layout>
-            {user?.role === 'MANAGER' ? <ManagerDashboard /> : <SalesDashboard />}
+            {user?.role === 'ADMIN' ? <AdminDashboard /> : user?.role === 'MANAGER' ? <ManagerDashboard /> : <SalesDashboard />}
           </Layout>
         </ProtectedRoute>
       } />
