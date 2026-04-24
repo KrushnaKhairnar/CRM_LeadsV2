@@ -37,6 +37,26 @@ async def create_lead(payload: LeadCreate, db=Depends(get_db), user=Depends(get_
     lead = await svc.create_lead(payload.model_dump(), user)
     return lead
 
+# @router.get("", response_model=dict)
+# async def list_leads(
+#     db=Depends(get_db),
+#     user=Depends(get_current_user),
+#     page: int = Query(1, ge=1),
+#     page_size: int = Query(20, ge=5, le=100),
+#     sort_by: str = Query("updated_at"),
+#     sort_dir: int = Query(-1),
+#     status: Optional[str] = None,
+#     temperature: Optional[str] = None,
+#     pipeline_stage: Optional[str] = None,
+#     assigned_to: Optional[str] = None,
+#     q: Optional[str] = None,
+# ):
+#     svc = LeadsService(db)
+#     filters = _filters(status, temperature, pipeline_stage, assigned_to, q)
+#     # If filters include $or from search, merge with role or by $and
+#     items, total = await svc.list_for_user(user, filters, page, page_size, (sort_by, sort_dir))
+#     return {"items": items, "total": total, "page": page, "page_size": page_size}
+
 @router.get("", response_model=dict)
 async def list_leads(
     db=Depends(get_db),
@@ -52,11 +72,53 @@ async def list_leads(
     q: Optional[str] = None,
 ):
     svc = LeadsService(db)
-    filters = _filters(status, temperature, pipeline_stage, assigned_to, q)
-    # If filters include $or from search, merge with role or by $and
-    items, total = await svc.list_for_user(user, filters, page, page_size, (sort_by, sort_dir))
-    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
+    filters = _filters(status, temperature, pipeline_stage, assigned_to, q)
+
+    user_id = str(user["user_id"])
+    user_type = user.get("role", "").lower()
+    print("User Type:", user_type)  # Debug print
+
+    # Role based filter
+    if user_type == "manager":
+        # Manager can see:
+        # 1. Leads created by manager
+        # 2. Leads assigned to manager sales users
+        role_filter = {
+            "$or": [
+                {"created_by": user_id},
+                {"manager_id": user_id}
+            ]
+        }
+    else:
+        # Normal user can see only own leads
+        role_filter = {
+            "$or": [
+                {"created_by": user_id},
+                {"assigned_to": user_id}
+            ]
+        }
+
+    # Merge with other filters
+    if filters:
+        final_filter = {"$and": [role_filter, filters]}
+    else:
+        final_filter = role_filter
+
+    items, total = await svc.list_for_user(
+        user,
+        final_filter,
+        page,
+        page_size,
+        (sort_by, sort_dir)
+    )
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
 @router.get("/export.csv")
 async def export_csv(
     db=Depends(get_db),
