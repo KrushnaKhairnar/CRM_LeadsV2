@@ -15,6 +15,7 @@ class UserPublic(BaseModel):
     user_id: str
     username: str
     role: Role
+    is_active: bool = True
     created_by: Optional[str] = None
     created_at: datetime
 
@@ -42,3 +43,9 @@ class UserProfileUpdate(BaseModel):
 
 class UserUpdateByManager(BaseModel):
     is_active: Optional[bool] = None
+
+
+class ManagerUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    is_active: Optional[bool] = True

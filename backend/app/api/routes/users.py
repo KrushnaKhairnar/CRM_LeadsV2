@@ -1,8 +1,10 @@
+import threading
+from genericpath import exists
 from fastapi import APIRouter, Depends, HTTPException
 from app.core.deps import Roles, require_roles, get_current_user
 from app.db.mongo import get_db
 from app.repositories.users import UsersRepository
-from app.models.users import UserProfileUpdate, UserUpdateByManager
+from app.models.users import UserProfileUpdate, UserUpdateByManager, ManagerUpdate
 
 
 router = APIRouter()
@@ -17,11 +19,49 @@ async def list_managers(db=Depends(get_db), user=Depends(require_roles([Roles.AD
             "user_id": u.get("user_id"),
             "username": u.get("username"),
             "role": u.get("role"),
+            "is_active":u.get("is_active",True),
             "created_by": u.get("created_by"),
             "created_at": u.get("created_at"),
         }
         for u in managers
     ]
+
+
+# -------------- Admin can update managers---------------------
+
+@router.patch("/managers/{user_id}", response_model=dict)
+async def update_manager(
+    user_id: str,
+    payload: ManagerUpdate,
+    db=Depends(get_db),
+    user=Depends(require_roles([Roles.ADMIN]))
+):
+    manager = await db.users.find_one({
+        "user_id": user_id,
+        "role": "MANAGER"
+    })
+
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")  
+    
+    
+ 
+    update_data = payload.model_dump(exclude_unset=True)
+
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": update_data}
+    )
+
+    updated = await db.users.find_one({"user_id": user_id})
+
+    return {
+        "user_id": updated["user_id"],
+        "username": updated["username"],
+        "email": updated.get("email"),
+        "is_active": updated.get("is_active", True)
+    }
+
 
 @router.get("/my-team", response_model=list)
 async def list_my_team(db=Depends(get_db), user=Depends(require_roles([Roles.MANAGER]))):
@@ -77,7 +117,7 @@ async def update_sales_status(
 
 
 @router.get("/me", response_model=dict)
-async def get_profile(db=Depends(get_db), user=Depends(get_current_user)):
+async def get_profile(db= Depends(get_db), user=Depends(get_current_user)):
     repo = UsersRepository(db)
     u = await repo.get_by_id(user["user_id"])
     return {
