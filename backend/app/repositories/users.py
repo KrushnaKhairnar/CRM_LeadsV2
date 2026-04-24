@@ -51,3 +51,21 @@ class UsersRepository:
             return await self.get_by_id(user_id)
         await self.db.users.update_one({"user_id": user_id}, {"$set": allowed})
         return await self.get_by_id(user_id)
+
+
+async def update_sales_by_manager(self, manager_id: str, sales_user_id: str, data: dict):
+    user = await self.col.find_one({
+        "user_id": sales_user_id,
+        "created_by": manager_id,
+        "role": "SALES"
+    })
+
+    if not user:
+        return None
+
+    await self.col.update_one(
+        {"user_id": sales_user_id},
+        {"$set": data}
+    )
+
+    return await self.col.find_one({"user_id": sales_user_id})

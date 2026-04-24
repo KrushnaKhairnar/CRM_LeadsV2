@@ -10,7 +10,7 @@ export function useWS() {
 
   useEffect(() => {
     if (!token) return
-    const url = (import.meta.env.VITE_WS_BASE || 'ws://localhost:8000') + `/ws?token=${token}`
+    const url = (import.meta.env.VITE_WS_BASE || 'ws://localhost:8005') + `/ws?token=${token}`
     const ws = new WebSocket(url)
     wsRef.current = ws
 

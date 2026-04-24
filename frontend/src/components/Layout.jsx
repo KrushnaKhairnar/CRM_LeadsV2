@@ -57,10 +57,11 @@ export default function Layout({ children }) {
           {isManager && <NavLink to="/analytics" className={linkClass}><TrendingUp size={16} /> Analytics</NavLink>}
           {isManager && <NavLink to="/team" className={linkClass}><Users2 size={16} /> Team Performance</NavLink>}
           {isManager && <NavLink to="/revenue" className={linkClass}><Banknote size={16} /> Revenue</NavLink>}
+          {isManager && <NavLink to="/my-team" className={linkClass}><Users2 size={16} /> My Team</NavLink>}
 
           {!isAdmin && <NavLink to="/views" className={linkClass}><Bookmark size={16} /> Saved Views</NavLink>}
           {!isAdmin && <NavLink to="/invoices" className={linkClass}><Banknote size={16} /> Invoices</NavLink>}
-          
+
           {(!isManager && !isAdmin) && <NavLink to="/achievements" className={linkClass}><Medal size={16} /> Achievements</NavLink>}
           <NavLink to="/profile" className={linkClass}><UserCircle2 size={16} /> My Profile</NavLink>
           <NavLink to="/settings" className={linkClass}><Settings size={16} /> Settings</NavLink>

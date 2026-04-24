@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=4, max_length=128)
     role: Role
+    is_active: bool = True
 
 class UserPublic(BaseModel):
     user_id: str
@@ -38,3 +39,6 @@ class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
+
+class UserUpdateByManager(BaseModel):
+    is_active: Optional[bool] = None

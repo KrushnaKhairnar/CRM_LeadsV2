@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 class FollowupCreate(BaseModel):
     done_at: datetime
@@ -16,6 +16,6 @@ class FollowupOut(BaseModel):
     done_at: datetime
     note: str
     outcome: Optional[str] = None
-    next_followup_at: Optional[datetime] = None
+    next_followup_at: datetime = datetime.now(timezone.utc)
     created_by: str
     created_at: datetime

@@ -70,7 +70,7 @@ export default function Login() {
         </form>
 
         <div className="mt-4 text-xs text-slate-500 text-center">
-          Backend http://localhost:8000 • Frontend http://localhost:5173
+          Backend http://localhost:8005 • Frontend http://localhost:5173
         </div>
       </div>
     </div>

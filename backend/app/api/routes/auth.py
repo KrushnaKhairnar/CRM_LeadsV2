@@ -10,10 +10,31 @@ router = APIRouter()
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: LoginRequest, db=Depends(get_db)):
     repo = UsersRepository(db)
+
     user = await repo.get_by_username(payload.username)
+
+    # Invalid username / password
     if not user or not verify_password(payload.password, user["password_hash"]):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    token = create_access_token(user["user_id"], extra={"role": user["role"], "username": user["username"]})
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+
+    # Only active users can login
+    if not user.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is inactive. Contact manager."
+        )
+
+    token = create_access_token(
+        user["user_id"],
+        extra={
+            "role": user["role"],
+            "username": user["username"]
+        }
+    )
+
     return TokenResponse(access_token=token)
 
 @router.get("/me", response_model=MeResponse)

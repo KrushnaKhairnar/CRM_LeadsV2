@@ -22,6 +22,7 @@ import Invoices from '../pages/Invoices.jsx'
 import InvoicePrint from '../pages/InvoicePrint.jsx'
 import ManagerRevenue from '../pages/ManagerRevenue.jsx'
 import ManagerTeam from '../pages/ManagerTeam.jsx'
+import MyTeamList from '../pages/MyTeamList.jsx'
 
 export default function App() {
   const token = useAuthStore(s => s.token)
@@ -65,7 +66,7 @@ export default function App() {
         </ProtectedRoute>
       } />
 
-        <Route path="/projects" element={
+      <Route path="/projects" element={
         <ProtectedRoute>
           <Layout><Products /></Layout>
         </ProtectedRoute>
@@ -114,6 +115,11 @@ export default function App() {
       <Route path="/team" element={
         <ProtectedRoute>
           <Layout><ManagerTeam /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/my-team" element={
+        <ProtectedRoute>
+          <Layout><MyTeamList /></Layout>
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/" replace />} />

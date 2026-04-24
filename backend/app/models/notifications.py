@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 class NotificationOut(BaseModel):
     notification_id: str
@@ -9,7 +9,7 @@ class NotificationOut(BaseModel):
     message: str
     link: str
     read: bool
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = datetime.now(timezone.utc)
 
 class NotificationRead(BaseModel):
     read: bool = True

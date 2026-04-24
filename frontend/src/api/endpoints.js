@@ -12,11 +12,14 @@ export const UsersAPI = {
   myTeam: () => api.get("/users/my-team").then((r) => r.data),
   me: () => api.get("/users/me").then((r) => r.data),
   updateMe: (payload) => api.patch("/users/me", payload).then((r) => r.data),
+  updateMyTeam: (id, data) =>
+  api.patch(`/users/my-team/${id}`, data).then(r => r.data),
   lookup: (ids) =>
     api
       .get("/users/lookup", { params: { ids: ids.join(",") } })
       .then((r) => r.data),
 };
+
 
 
 export const projectsAPI = {
