@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Clock, Pencil, Shield, UserPlus, Users2 } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { UsersAPI } from '../api/endpoints'
 import RegisterUserModal from './components/RegisterUserModal'
-import { UserPlus, Shield, Users2, Clock, Pencil } from 'lucide-react'
 
 export default function AdminDashboard() {
   const qc = useQueryClient()
@@ -36,15 +37,23 @@ export default function AdminDashboard() {
     setOpenEdit(true)
   }
 
+
   const saveManager = async () => {
     try {
       await UsersAPI.updateManager(selected.user_id, form)
 
       qc.invalidateQueries({ queryKey: ['managers'] })
 
+      toast.success('Manager updated successfully')
+
       setOpenEdit(false)
+
     } catch (error) {
-      console.error(error)
+      if (error.response?.status === 400) {
+        toast.error('Username already exists, Please Choose another username')
+      } else {
+        toast.error('Username already exists, Choose another username ')
+      }
     }
   }
 

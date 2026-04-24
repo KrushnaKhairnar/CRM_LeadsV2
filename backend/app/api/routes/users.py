@@ -44,7 +44,12 @@ async def update_manager(
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")  
     
-    
+    #while updating manager check if username is already exists
+    if payload.username and payload.username != manager["username"]:
+        existing_user = await db.users.find_one({"username": payload.username})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
+
  
     update_data = payload.model_dump(exclude_unset=True)
 
@@ -81,38 +86,94 @@ async def list_my_team(db=Depends(get_db), user=Depends(require_roles([Roles.MAN
     ]
 # ------ MANAGERS CAN UPDATE STATUS OF SALES PERSONS----------#
 
-@router.patch("/my-team/{user_id}", response_model=dict)
-async def update_sales_status(
+# @router.patch("/my-team/{user_id}", response_model=dict)
+# async def update_sales_status(
+#     user_id: str,
+#     payload: UserUpdateByManager,
+#     db=Depends(get_db),
+#     user=Depends(require_roles([Roles.MANAGER]))
+# ):
+#     member = await db.users.find_one({
+#         "user_id": user_id,
+#         "created_by": user["user_id"],
+#         "role": "SALES"
+#     })
+
+#     if not member:
+#         raise HTTPException(status_code=404, detail="Sales user not found")
+
+#     await db.users.update_one(
+#         {"user_id": user_id},
+#         {
+#             "$set": {
+#                 "is_active": payload.is_active
+#             }
+#         }
+#     )
+
+#     updated = await db.users.find_one({"user_id": user_id})
+
+#     return {
+#         "message": "Status updated successfully",
+#         "user_id": updated["user_id"],
+#         "username": updated["username"],
+#         "is_active": updated["is_active"]
+#     }
+
+
+
+#     from fastapi import HTTPException
+
+@router.patch("/managers/{user_id}", response_model=dict)
+async def update_manager(
     user_id: str,
-    payload: UserUpdateByManager,
+    payload: dict,
     db=Depends(get_db),
-    user=Depends(require_roles([Roles.MANAGER]))
+    user=Depends(require_roles([Roles.ADMIN]))
 ):
-    member = await db.users.find_one({
+    manager = await db.users.find_one({
         "user_id": user_id,
-        "created_by": user["user_id"],
-        "role": "SALES"
+        "role": "MANAGER"
     })
 
-    if not member:
-        raise HTTPException(status_code=404, detail="Sales user not found")
+    if not manager:
+        raise HTTPException(
+            status_code=404,
+            detail="Manager not found"
+        )
+
+    # safe username read
+    new_username = payload.get("username")
+
+    if new_username is not None:
+        new_username = new_username.strip()
+
+        # only check duplicate if changed
+        if new_username != manager.get("username", "").strip():
+
+            existing = await db.users.find_one({
+                "username": new_username,
+                "user_id": {"$ne": user_id}
+            })
+
+            if existing:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Username already exists"
+                )
 
     await db.users.update_one(
         {"user_id": user_id},
-        {
-            "$set": {
-                "is_active": payload.is_active
-            }
-        }
+        {"$set": payload}
     )
 
     updated = await db.users.find_one({"user_id": user_id})
 
     return {
-        "message": "Status updated successfully",
         "user_id": updated["user_id"],
         "username": updated["username"],
-        "is_active": updated["is_active"]
+        "email": updated.get("email"),
+        "is_active": updated.get("is_active", True)
     }
 
 
