@@ -78,9 +78,22 @@ class LeadsService:
                 await self.assign(lid, assigned_to, manager)
                 count += 1
             except Exception:
-                # skip invalid ids or access errors silently for bulk
+             
                 continue
         return count
+
+
+# async def bulk_assign(self, lead_ids: List[str], assigned_to: Optional[str], manager: dict) -> int:
+#     count = 0
+
+#     for lid in lead_ids:
+#         try:
+#             await self.assign(lid, assigned_to, manager)
+#             count += 1
+#         except Exception as e:
+#             print("Bulk assign failed:", lid, str(e))
+
+#     return count
 
     async def bulk_status(self, lead_ids: List[str], status: str, manager: dict) -> int:
         count = 0

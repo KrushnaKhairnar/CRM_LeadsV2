@@ -37,25 +37,7 @@ async def create_lead(payload: LeadCreate, db=Depends(get_db), user=Depends(get_
     lead = await svc.create_lead(payload.model_dump(), user)
     return lead
 
-# @router.get("", response_model=dict)
-# async def list_leads(
-#     db=Depends(get_db),
-#     user=Depends(get_current_user),
-#     page: int = Query(1, ge=1),
-#     page_size: int = Query(20, ge=5, le=100),
-#     sort_by: str = Query("updated_at"),
-#     sort_dir: int = Query(-1),
-#     status: Optional[str] = None,
-#     temperature: Optional[str] = None,
-#     pipeline_stage: Optional[str] = None,
-#     assigned_to: Optional[str] = None,
-#     q: Optional[str] = None,
-# ):
-#     svc = LeadsService(db)
-#     filters = _filters(status, temperature, pipeline_stage, assigned_to, q)
-#     # If filters include $or from search, merge with role or by $and
-#     items, total = await svc.list_for_user(user, filters, page, page_size, (sort_by, sort_dir))
-#     return {"items": items, "total": total, "page": page, "page_size": page_size}
+
 
 @router.get("", response_model=dict)
 async def list_leads(
@@ -149,6 +131,15 @@ async def export_csv(
         ])
     return Response(content=output.getvalue(), media_type="text/csv")
 
+
+
+@router.post("/bulk/assign", response_model=dict)
+async def bulk_assign(payload: BulkAssignRequest, db=Depends(get_db), user=Depends(get_current_user)):
+    ensure_manager(user)
+    svc = LeadsService(db)
+    modified = await svc.bulk_assign(payload.lead_ids, payload.assigned_to, user)
+    return {"modified": modified}
+
 @router.get("/{lead_id}", response_model=LeadOut)
 async def get_lead(
     lead_id: str,
@@ -191,12 +182,7 @@ async def assign_lead(lead_id: str, payload: AssignRequest, db=Depends(get_db), 
     updated = await svc.assign(lead_id, payload.assigned_to, user)
     return updated
 
-@router.post("/bulk/assign", response_model=dict)
-async def bulk_assign(payload: BulkAssignRequest, db=Depends(get_db), user=Depends(get_current_user)):
-    ensure_manager(user)
-    svc = LeadsService(db)
-    modified = await svc.bulk_assign(payload.lead_ids, payload.assigned_to, user)
-    return {"modified": modified}
+
 
 @router.patch("/bulk/status", response_model=dict)
 async def bulk_status(payload: BulkStatusRequest, db=Depends(get_db), user=Depends(get_current_user)):

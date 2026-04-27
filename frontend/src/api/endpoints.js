@@ -57,7 +57,7 @@ export const LeadsAPI = {
     api.post(`/leads/${id}/notes`, payload).then((r) => r.data),
   bulkAssign: (payload) =>
     api.post(`/leads/bulk/assign`, payload).then((r) => r.data),
-  bulkStatus: (payload) =>
+  bulkStatus: (payload) =>  
     api.patch(`/leads/bulk/status`, payload).then((r) => r.data),
   bulkTemperature: (payload) =>
     api.patch(`/leads/bulk/temperature`, payload).then((r) => r.data),
@@ -71,6 +71,11 @@ export const LeadsAPI = {
     const qs = new URLSearchParams(params || {}).toString();
     return api.defaults.baseURL + `/leads/export.csv${qs ? "?" + qs : ""}`;
   },
+   exportCsv: (params) =>
+    api.get("/leads/export.csv", {
+      params,
+      responseType: "blob",
+    }),
 };
 
 export const NotificationsAPI = {

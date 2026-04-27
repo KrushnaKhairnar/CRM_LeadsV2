@@ -47,14 +47,39 @@ export default function LeadsList() {
   }), [page, q, status, temperature, pipeline_stage, assigned_to, isManager, sortBy, sortDir])
 
   const { data, isLoading } = useQuery({ queryKey: ['leads', params], queryFn: () => LeadsAPI.list(params) })
-  const { data: salesUsers } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales(), enabled: isManager })
+  // const { data: salesUsers } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales(), enabled: isManager })
+  const { data: salesUsers } = useQuery({ queryKey: ['my-team'], queryFn: () => UsersAPI.myTeam(), enabled: isManager })
 
   const totalPages = Math.max(1, Math.ceil((data?.total || 0) / (data?.page_size || 20)))
 
-  const exportCsv = () => {
-    const url = LeadsAPI.exportCsvUrl(params)
-    window.open(url, '_blank')
+  // const exportCsv = () => {
+  //   const url = LeadsAPI.exportCsvUrl(params)
+  //   window.open(url, '_blank')
+  // }
+
+
+const exportCsv = async () => {
+  try {
+    const res = await LeadsAPI.exportCsv(params);
+
+    const url = window.URL.createObjectURL(
+      new Blob([res.data], { type: "text/csv" })
+    );
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "leads.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error("Export Error:", error.response || error);
+    alert(error.response?.data?.detail || "Failed to export CSV");
   }
+};
+
 
   const toggle = (id) => {
     setSelected(prev => {
@@ -439,7 +464,7 @@ function SaveViewModal({ open, onClose, onConfirm }) {
             <Dialog.Panel className="w-full max-w-md bg-white rounded-2xl shadow-card border p-5">
               <Dialog.Title className="text-lg font-semibold">Save Current Filters</Dialog.Title>
               <div className="mt-3">
-                <input className="w-full" placeholder="View name (e.g., My Overdue)" value={name} onChange={e=>setName(e.target.value)} />
+                <input className="w-full" placeholder="View name (e.g., My Overdue)" value={name} onChange={e => setName(e.target.value)} />
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 <button onClick={onClose} className="px-3 py-2 rounded-lg border text-sm">Cancel</button>

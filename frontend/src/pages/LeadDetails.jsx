@@ -29,7 +29,9 @@ export default function LeadDetails() {
   }, [lead, audit])
   const { data: actors } = useQuery({ queryKey: ['users-lookup', actorIds.join(',')], queryFn: () => actorIds.length ? UsersAPI.lookup(actorIds) : Promise.resolve([]), enabled: actorIds.length > 0 })
   const nameOf = (id) => (actors || []).find(u => u.user_id === id)?.username || (id ? id.slice(-6) : '—')
-  const { data: salesUsers } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales(), enabled: isManager })
+  const { data: salesUsers } = useQuery({ queryKey: ['my-team'], queryFn: () => UsersAPI.myTeam(), enabled: isManager })
+  // const { data: salesUsers } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales(), enabled: isManager })
+
 
   const [openFU, setOpenFU] = useState(null)
   const [openProduct, setOpenProduct] = useState(false)
@@ -205,7 +207,7 @@ export default function LeadDetails() {
             </Field>
             {isManager && (
               <div className="col-span-2">
-                <Field label="Assign To (Manager only)">
+                <Field label="Assign to">
                   <select className="border rounded-lg px-3 py-2 w-full" value={lead.assigned_to || ''}
                     onChange={e => assignMutation.mutate({ assigned_to: e.target.value || null })}>
                     <option value="">UNASSIGNED</option>
