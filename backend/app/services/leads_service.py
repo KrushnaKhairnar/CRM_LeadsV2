@@ -147,6 +147,26 @@ class LeadsService:
         lead = await self.repo.get_by_id(lead_id)
         return self._compute_overdue(lead)
 
+    async def create_bulk_leads(self, leads_data: List[Dict[str, Any]], actor: dict) -> int:
+        count = 0
+        for lead_data in leads_data:
+            try:
+                doc = dict(lead_data)
+                doc["created_by"] = actor["user_id"]
+                doc["manager_id"] = actor.get("created_by") 
+                doc["assigned_to"] = None
+                doc["assigned_by"] = None
+                doc["assigned_at"] = None
+                
+                lead_id = await self.repo.create(doc)
+                await self.audit.log(lead_id, actor["user_id"], "LEAD_CREATED", before=None, after=doc)
+                count += 1
+            except Exception as e:
+                # Log or handle exceptions for individual lead creation failures
+                print(f"Failed to create lead: {e}")
+                continue
+        return count
+
     async def add_product(self, lead_id: str, product_data: Dict[str, Any], actor: dict) -> Dict[str, Any]:
         lead = await self.repo.get_by_id(lead_id)
         if not lead:

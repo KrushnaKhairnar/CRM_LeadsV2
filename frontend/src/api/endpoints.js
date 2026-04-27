@@ -63,6 +63,12 @@ export const LeadsAPI = {
     api.patch(`/leads/bulk/temperature`, payload).then((r) => r.data),
   bulkStage: (payload) =>
     api.patch(`/leads/bulk/stage`, payload).then((r) => r.data),
+  bulkCsvUpload: (formData) =>
+    api.post(`/leads/bulk/csv`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }).then((r) => r.data),
   followups: (id, productId) => api.get(`/leads/${id}/followups`, { params: productId ? { product_id: productId } : {} }).then((r) => r.data),
   addFollowup: (id, payload) =>
     api.post(`/leads/${id}/followups`, payload).then((r) => r.data),

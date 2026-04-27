@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, File, UploadFile
 from typing import Optional
 from datetime import datetime
 import csv, io
@@ -252,3 +252,37 @@ async def add_note(lead_id: str, payload: NoteCreate, db=Depends(get_db), user=D
     svc = LeadsService(db)
     updated = await svc.add_note(lead_id, payload.text, user)
     return updated
+
+@router.post("/bulk/csv", response_model=dict)
+async def bulk_csv_upload(
+    file: UploadFile = File(...),
+    db=Depends(get_db),
+    user=Depends(get_current_user)
+):
+    ensure_manager(user)
+    svc = LeadsService(db)
+    
+    if not file.content_type == "text/csv":
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a CSV file.")
+
+    contents = await file.read()
+    file_like_object = io.StringIO(contents.decode("utf-8"))
+    reader = csv.DictReader(file_like_object)
+    
+    leads_to_create = []
+    for row in reader:
+        # Skip empty rows or rows without a name
+        if not row or not row.get('name'):
+            continue
+        try:
+            leads_to_create.append(LeadCreate(**row).model_dump())
+        except Exception as e:
+            print(f"Skipping row due to validation error: {row} - {e}")
+            continue
+
+    if not leads_to_create:
+        raise HTTPException(status_code=400, detail="CSV file is empty or contains no valid leads.")
+
+    created_count = await svc.create_bulk_leads(leads_to_create, user)
+    
+    return {"created_count": created_count}

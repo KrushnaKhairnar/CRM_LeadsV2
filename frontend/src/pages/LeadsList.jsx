@@ -29,6 +29,7 @@ export default function LeadsList() {
   const [openBulkTemp, setOpenBulkTemp] = useState(false)
   const [openBulkStage, setOpenBulkStage] = useState(false)
   const [openSaveView, setOpenSaveView] = useState(false)
+  const [openCsvImport, setOpenCsvImport] = useState(false)
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams)
@@ -108,7 +109,10 @@ const exportCsv = async () => {
         </div>
         <div className="flex gap-2">
           {isManager && (
-            <button onClick={exportCsv} className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700">Export CSV</button>
+            <>
+              <button onClick={() => setOpenCsvImport(true)} className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700">Import CSV</button>
+              <button onClick={exportCsv} className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700">Export CSV</button>
+            </>
           )}
           <button onClick={() => setOpenCreate(true)} className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm shadow-soft hover:shadow-hover">+ New Lead</button>
           <button onClick={() => setOpenSaveView(true)} className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50">Save View</button>
@@ -307,6 +311,23 @@ const exportCsv = async () => {
           }
         }}
       />
+
+      <BulkCsvImportModal
+        open={openCsvImport}
+        onClose={() => setOpenCsvImport(false)}
+        onConfirm={async (file) => {
+          try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const result = await LeadsAPI.bulkCsvUpload(formData);
+            toast.success(`${result.created_count} leads imported successfully`);
+            setOpenCsvImport(false);
+            qc.invalidateQueries({ queryKey: ['leads'] });
+          } catch (e) {
+            toast.error(e.response?.data?.detail || 'CSV import failed');
+          }
+        }}
+      />
     </div>
   )
 }
@@ -438,6 +459,47 @@ function BulkStageModal({ open, onClose, onConfirm }) {
               <div className="mt-4 flex justify-end gap-2">
                 <button onClick={onClose} className="px-3 py-2 rounded-lg border text-sm">Cancel</button>
                 <button onClick={confirm} className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm">Confirm</button>
+              </div>
+            </Dialog.Panel>
+          </Transition.Child>
+        </div>
+      </Dialog>
+    </Transition>
+  )
+}
+
+function BulkCsvImportModal({ open, onClose, onConfirm }) {
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const confirm = () => {
+    if (file) {
+      onConfirm(file);
+    }
+  };
+
+  return (
+    <Transition appear show={open} as={Fragment}>
+      <Dialog as="div" open={open} onClose={onClose} className="relative z-50">
+        <Transition.Child as={Fragment} enter="transition ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="transition ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        </Transition.Child>
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Transition.Child as={Fragment} enter="transition ease-out duration-200" enterFrom="opacity-0 translate-y-2 scale-95" enterTo="opacity-100 translate-y-0 scale-100" leave="transition ease-in duration-150" leaveFrom="opacity-100 translate-y-0 scale-100" leaveTo="opacity-0 translate-y-2 scale-95">
+            <Dialog.Panel className="w-full max-w-md bg-white rounded-2xl shadow-card border p-5">
+              <Dialog.Title className="text-lg font-semibold">Bulk CSV Import</Dialog.Title>
+              <div className="mt-3 text-sm">Upload a CSV file to bulk create leads.</div>
+              <div className="mt-3">
+                <input type="file" accept=".csv" onChange={handleFileChange} className="w-full" />
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <button onClick={onClose} className="px-3 py-2 rounded-lg border text-sm">Cancel</button>
+                <button onClick={confirm} disabled={!file} className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm disabled:opacity-50">Import</button>
               </div>
             </Dialog.Panel>
           </Transition.Child>
