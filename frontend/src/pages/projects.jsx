@@ -218,8 +218,9 @@ const Products = () => {
               <div style={{ height: "1px", background: "#eee" }} />
 
               <p><strong>ID:</strong> {selectedProduct.project_id}</p>
-              <p><strong>Created:</strong> {new Date(selectedProduct.created_at).toLocaleString()}</p>
-              <p><strong>Updated:</strong> {new Date(selectedProduct.updated_at).toLocaleString()}</p>
+            
+              <p><strong>Created:</strong> {new Date(selectedProduct.created_at).toLocaleString('en-GB')}</p>
+              <p><strong>Updated:</strong> {new Date(selectedProduct.updated_at).toLocaleString('en-GB')}</p>
 
               <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
                 <button

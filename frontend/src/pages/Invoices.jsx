@@ -28,10 +28,10 @@ export default function Invoices() {
           <div key={inv._id} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-2xl p-4 shadow-soft">
             <div className="flex items-center justify-between">
               <div className="font-medium">{inv.invoice_no}</div>
-              <span className={`text-[10px] px-2 py-1 rounded-full ${inv.status==='PAID'?'bg-emerald-100 text-emerald-700':inv.status==='SENT'?'bg-amber-100 text-amber-700':'bg-slate-100 text-slate-600'}`}>{inv.status}</span>
+              <span className={`text-[10px] px-2 py-1 rounded-full ${inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : inv.status === 'SENT' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{inv.status}</span>
             </div>
             <div className="mt-1 text-sm">{inv.client_name}{inv.client_company ? ` • ${inv.client_company}` : ''}</div>
-            <div className="mt-1 text-xs text-slate-500">Total • {inv.currency} {inv.total.toLocaleString()}</div>
+            <div className="mt-1 text-xs text-slate-500">Total • {inv.currency} {inv.total.toLocaleString('en-GB')}</div>
             <div className="mt-3 flex justify-end gap-2">
               <a className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50" href={`/invoice/${inv._id}`} target="_blank" rel="noreferrer">Open</a>
               {inv.status !== 'SENT' && <button onClick={() => send.mutate(inv._id)} className="px-3 py-2 rounded-lg border text-sm">Send</button>}
@@ -104,9 +104,9 @@ function CreateInvoice({ onClose, onCreated }) {
             <button onClick={addItem} className="px-3 py-2 rounded-lg border text-sm">+ Add item</button>
           </div>
           <div className="mt-3 text-sm text-right space-y-1">
-            <div>Subtotal: {form.currency} {totals.subtotal.toLocaleString()}</div>
-            <div>Tax (18%): {form.currency} {totals.tax.toLocaleString()}</div>
-            <div className="font-medium">Total: {form.currency} {totals.total.toLocaleString()}</div>
+            <div>Subtotal: {form.currency} {totals.subtotal.toLocaleString('en-GB')}</div>
+            <div>Tax (18%): {form.currency} {totals.tax.toLocaleString('en-GB')}</div>
+            <div className="font-medium">Total: {form.currency} {totals.total.toLocaleString('en-GB')}</div>
           </div>
         </div>
 

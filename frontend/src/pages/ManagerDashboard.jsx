@@ -62,7 +62,7 @@ export default function ManagerDashboard() {
         <Card title="Total Leads" value={data?.total_leads ?? '-'} />
         <Card title="Overdue Followups" value={data?.overdue_followups ?? '-'} />
         <Card title="Today's Followups" value={data?.today_followups ?? '-'} />
-        <Card title="Revenue (today)" value={(rev?.today ?? 0).toLocaleString()} />
+        <Card title="Revenue (today)" value={(rev?.today ?? 0).toLocaleString('en-GB')} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
@@ -153,7 +153,7 @@ export default function ManagerDashboard() {
                   <td className="py-2">{l.name}</td>
                   <td>{l.company || '-'}</td>
                   <td>{l.status}</td>
-                  <td>{l.next_followup_at ? new Date(l.next_followup_at).toLocaleString() : '-'}</td>
+                  <td>{l.next_followup_at ? new Date(l.next_followup_at).toLocaleString('en-GB') : '-'}</td>
                   <td className="text-right"><Link className="text-brand-700 hover:underline" to={`/leads/${l.lead_id}`}>Open</Link></td>
                 </tr>
               ))}

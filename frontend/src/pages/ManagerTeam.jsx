@@ -19,13 +19,13 @@ export default function ManagerTeam() {
           <div className="text-sm text-slate-500">Track individual and overall performance</div>
         </div>
         <div className="flex items-center gap-2">
-          <select className="text-sm" value={days} onChange={e=>setDays(Number(e.target.value))}>
+          <select className="text-sm" value={days} onChange={e => setDays(Number(e.target.value))}>
             <option value={7}>7d</option>
             <option value={15}>15d</option>
             <option value={30}>30d</option>
             <option value={90}>90d</option>
           </select>
-          <select className="text-sm" value={sales} onChange={e=>setSales(e.target.value)}>
+          <select className="text-sm" value={sales} onChange={e => setSales(e.target.value)}>
             <option value="">All Sales</option>
             {(users || []).map(u => <option key={u.user_id} value={u.user_id}>{u.username}</option>)}
           </select>
@@ -80,7 +80,7 @@ export default function ManagerTeam() {
                     <td className="py-2">{p.name}</td>
                     <td className="text-right">{p.leads}</td>
                     <td className="text-right">{p.won}</td>
-                    <td className="text-right">{Math.round(p.revenue).toLocaleString()}</td>
+                    <td className="text-right">{Math.round(p.revenue).toLocaleString('en-GB')}</td>
                   </tr>
                 ))}
                 {byPerson.length === 0 && <tr><td className="py-4 text-slate-500" colSpan="4">Select “All Sales” to see breakdown.</td></tr>}

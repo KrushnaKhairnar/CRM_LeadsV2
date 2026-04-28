@@ -42,11 +42,11 @@ export default function ManagerRevenue() {
       </div>
 
       <div className="grid md:grid-cols-5 gap-4">
-        <Card title="Total (all time)" value={(data?.total_all ?? 0).toLocaleString()} />
-        <Card title="Total (period)" value={(data?.total_period ?? 0).toLocaleString()} />
-        <Card title="Today" value={(data?.today ?? 0).toLocaleString()} />
-        <Card title="Won From Leads (period)" value={(data?.won_from_leads ?? 0).toLocaleString()} />
-        <Card title="Pipeline Open (period)" value={(data?.pipeline_open ?? 0).toLocaleString()} />
+        <Card title="Total (all time)" value={(data?.total_all ?? 0).toLocaleString('en-GB')} />
+        <Card title="Total (period)" value={(data?.total_period ?? 0).toLocaleString('en-GB')} />
+        <Card title="Today" value={(data?.today ?? 0).toLocaleString('en-GB')} />
+        <Card title="Won From Leads (period)" value={(data?.won_from_leads ?? 0).toLocaleString('en-GB')} />
+        <Card title="Pipeline Open (period)" value={(data?.pipeline_open ?? 0).toLocaleString('en-GB')} />
         <Card title="Active currency" value={currency || 'All'} />
       </div>
 

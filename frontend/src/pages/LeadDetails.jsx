@@ -7,6 +7,9 @@ import { useAuthStore } from '../auth/store'
 import { toast } from 'sonner'
 import { Dialog, Transition } from '@headlessui/react'
 import { AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { CalendarDays } from "lucide-react"
 
 
 export default function LeadDetails() {
@@ -100,12 +103,62 @@ export default function LeadDetails() {
     onError: (e) => toast.error('Delete failed', { description: e?.response?.data?.detail || 'Error' })
   })
 
+
+
   const deleteProduct = (productId) => {
     deleteProductMutation.mutate(productId)
   }
 
+  function formatDateTimeForBackend(date) {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+
+    const hour = String(date.getHours()).padStart(2, "0")
+    const minute = String(date.getMinutes()).padStart(2, "0")
+    const second = "00"
+
+    return `${year}-${month}-${day}T${hour}:${minute}:${second}`
+  }
+  function DateTimePickerField({ value, onSave }) {
+    const [selectedDate, setSelectedDate] = useState(
+      value ? new Date(value) : null
+    )
+
+    return (
+      <div className="relative w-full">
+        {/* Calendar Icon */}
+        <CalendarDays
+          size={18}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 z-10 pointer-events-none"
+        />
+
+        <DatePicker
+          selected={selectedDate}
+          onChange={(date) => setSelectedDate(date)}
+          onBlur={() => onSave(selectedDate)}
+          showTimeSelect
+          timeFormat="HH:mm"
+          timeIntervals={15}
+          dateFormat="dd/MM/yyyy HH:mm"
+          placeholderText="Select followup date"
+          className="border rounded-lg px-3 py-2 pr-10 w-full"
+
+
+          /* Open calendar above input */
+          popperPlacement="top-start"
+
+          /* Keep above all content */
+          popperClassName="z-[9999]"
+          portalId="root"
+        />
+      </div>
+    )
+  }
+
+
   const fuSeries = useMemo(() => {
-    const arr = (followups || []).map(f => ({ date: new Date(f.done_at).toLocaleDateString(), count: 1 }))
+    const arr = (followups || []).map(f => ({ date: new Date(f.done_at).toLocaleDateString('en-GB'), count: 1 }))
     const by = {}
     for (const a of arr) by[a.date] = (by[a.date] || 0) + 1
     return Object.keys(by).map(k => ({ date: k, count: by[k] }))
@@ -134,13 +187,13 @@ export default function LeadDetails() {
             <Row label="Status"><Badge value={lead.status} /></Row>
             <Row label="Temperature"><Badge value={lead.temperature} /></Row>
             <Row label="Stage">{lead.pipeline_stage ? <Badge value={lead.pipeline_stage} /> : <span className="text-slate-400">—</span>}</Row>
-            <Row label="Expected Value"><span className="font-medium">{(lead.expected_value ?? 0).toLocaleString()}</span></Row>
+            <Row label="Expected Value"><span className="font-medium">{(lead.expected_value ?? 0).toLocaleString('en-GB')}</span></Row>
             <Row label="Source"><span>{lead.source || '-'}</span></Row>
-            <Row label="Next Followup"><span>{lead.next_followup_at ? new Date(lead.next_followup_at).toLocaleString() : '-'}</span></Row>
+            <Row label="Next Followup"><span>{lead.next_followup_at ? new Date(lead.next_followup_at).toLocaleString('en-GB') : '-'}</span></Row>
             <Row label="Project"><span>{lead.project_name || '-'}</span></Row>
             <Row label="Assigned To"><span>{lead.assigned_to ? nameOf(lead.assigned_to) : 'UNASSIGNED'}</span></Row>
             <Row label="Assigned By"><span>{lead.assigned_by ? nameOf(lead.assigned_by) : '-'}</span></Row>
-            <Row label="Assigned At"><span>{lead.assigned_at ? new Date(lead.assigned_at).toLocaleString() : '-'}</span></Row>
+            <Row label="Assigned At"><span>{lead.assigned_at ? new Date(lead.assigned_at).toLocaleString('en-GB') : '-'}</span></Row>
             <div>
               <div className="text-xs text-slate-500 mb-1">Tags</div>
               <div className="flex flex-wrap gap-2">
@@ -198,12 +251,16 @@ export default function LeadDetails() {
               </select>
             </Field>
             <Field label="Next Followup">
-              <input type="datetime-local" className="border rounded-lg px-3 py-2 w-full"
-                defaultValue={lead.next_followup_at ? new Date(lead.next_followup_at).toISOString().slice(0, 16) : ''}
-                onBlur={(e) => {
-                  const v = e.target.value
-                  patchMutation.mutate({ next_followup_at: v ? new Date(v).toISOString() : null })
-                }} />
+              <DateTimePickerField
+                value={lead.next_followup_at}
+                onSave={(date) =>
+                  patchMutation.mutate({
+                    next_followup_at: date
+                      ? formatDateTimeForBackend(date)
+                      : null,
+                  })
+                }
+              />
             </Field>
             {isManager && (
               <div className="col-span-2">
@@ -259,11 +316,11 @@ export default function LeadDetails() {
             {(followups || []).map(f => (
               <div key={f._id} className="border rounded-xl p-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium">{new Date(f.done_at).toLocaleString()}</div>
+                  <div className="text-sm font-medium">{new Date(f.done_at).toLocaleString('en-GB')}</div>
                   {f.outcome && <div className="text-xs text-slate-500">{f.outcome}</div>}
                 </div>
                 <div className="text-sm text-slate-700 mt-2 whitespace-pre-wrap">{f.note}</div>
-                {f.next_followup_at && <div className="text-xs text-slate-500 mt-2">Next: {new Date(f.next_followup_at).toLocaleString()}</div>}
+                {f.next_followup_at && <div className="text-xs text-slate-500 mt-2">Next: {new Date(f.next_followup_at).toLocaleString('en-GB')}</div>}
               </div>
             ))}
             {(followups || []).length === 0 && <div className="text-sm text-slate-500">No followups yet.</div>}
@@ -298,7 +355,7 @@ export default function LeadDetails() {
                   </div>
 
                   <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
-                    {new Date().toLocaleDateString()}{" "}
+                    {new Date().toLocaleDateString('en-GB')}{" "}
                     {new Date().toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -428,7 +485,7 @@ function Notes({ lead, onAdd, nameOf }) {
       <div className="mt-3 space-y-2">
         {notes.map((n, i) => (
           <div key={i} className="border rounded-xl p-3">
-            <div className="text-xs text-slate-500">{n.created_at ? new Date(n.created_at).toLocaleString() : ''} • {nameOf(n.author_id)}</div>
+            <div className="text-xs text-slate-500">{n.created_at ? new Date(n.created_at).toLocaleString('en-GB') : ''} • {nameOf(n.author_id)}</div>
             <div className="text-sm mt-1 whitespace-pre-wrap">{n.text}</div>
           </div>
         ))}
@@ -662,7 +719,7 @@ function TagAdder({ onAdd }) {
 }
 
 function FollowupModal({ open, onClose, onSubmit, products, leadId, qc, productId }) {
-  const [doneAt, setDoneAt] = useState(new Date().toISOString().slice(0, 16))
+  const [doneAt, setDoneAt] = useState(new Date().toLocaleDateString('en-GB').slice(0, 16))
   const [note, setNote] = useState('')
   const [outcome, setOutcome] = useState('interested')
   const [nextAt, setNextAt] = useState('')
@@ -675,13 +732,13 @@ function FollowupModal({ open, onClose, onSubmit, products, leadId, qc, productI
   const submit = () => {
     if (!note.trim()) return toast.error('Note is required')
     const payload = {
-      done_at: new Date(doneAt).toISOString(),
+      done_at: new Date(doneAt).toLocaleDateString('en-GB'),
       note,
       outcome,
       point_of_contact_name: null,
       point_of_contact_phone: null,
       point_of_contact_email: null,
-      next_followup_at: nextAt ? new Date(nextAt).toISOString() : null,
+      next_followup_at: nextAt ? new Date(nextAt).toLocaleDateString('en-GB') : null,
     }
     if (selectedProductId) {
       payload.product_id = selectedProductId

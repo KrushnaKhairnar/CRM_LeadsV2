@@ -59,27 +59,27 @@ export default function LeadsList() {
   // }
 
 
-const exportCsv = async () => {
-  try {
-    const res = await LeadsAPI.exportCsv(params);
+  const exportCsv = async () => {
+    try {
+      const res = await LeadsAPI.exportCsv(params);
 
-    const url = window.URL.createObjectURL(
-      new Blob([res.data], { type: "text/csv" })
-    );
+      const url = window.URL.createObjectURL(
+        new Blob([res.data], { type: "text/csv" })
+      );
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "leads.csv";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "leads.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
 
-  } catch (error) {
-    console.error("Export Error:", error.response || error);
-    alert(error.response?.data?.detail || "Failed to export CSV");
-  }
-};
+    } catch (error) {
+      console.error("Export Error:", error.response || error);
+      alert(error.response?.data?.detail || "Failed to export CSV");
+    }
+  };
 
 
   const toggle = (id) => {
@@ -192,6 +192,9 @@ const exportCsv = async () => {
                 <th className="px-4 cursor-pointer select-none" onClick={() => { setSortBy('next_followup_at'); setSortDir(sortBy === 'next_followup_at' ? -sortDir : 1) }}>
                   Next Followup {sortBy === 'next_followup_at' ? (sortDir === 1 ? '▲' : '▼') : ''}
                 </th>
+                <th className="px-4 cursor-pointer select-none" onClick={() => { setSortBy('assigned_to'); setSortDir(sortBy === 'assigned_to' ? -sortDir : 1) }}>
+                  Assigned To {sortBy === 'assigned_to' ? (sortDir === 1 ? '▲' : '▼') : ''}
+                </th>
                 <th className="px-4 text-right cursor-pointer select-none" onClick={() => { setSortBy('expected_value'); setSortDir(sortBy === 'expected_value' ? -sortDir : 1) }}>
                   Value {sortBy === 'expected_value' ? (sortDir === 1 ? '▲' : '▼') : ''}
                 </th>
@@ -213,10 +216,11 @@ const exportCsv = async () => {
                   <td className="px-4"><Badge value={l.status} /></td>
                   <td className="px-4"><Badge value={l.temperature} /></td>
                   <td className="px-4">{l.pipeline_stage ? <Badge value={l.pipeline_stage} /> : <span className="text-slate-400">—</span>}</td>
-                  <td className="px-4">{l.next_followup_at ? new Date(l.next_followup_at).toLocaleString() : '-'}</td>
-                  <td className="px-4 text-right">{(l.expected_value ?? 0).toLocaleString()}</td>
+                  <td className="px-4">{l.next_followup_at ? new Date(l.next_followup_at).toLocaleString('en-GB') : '-'}</td>
+                  <td className="px-4">{(salesUsers || []).find(u => u.user_id === l.assigned_to)?.username || <span className="text-slate-400">—</span>}</td>
+                  <td className="px-4 text-right">{(l.expected_value ?? 0).toLocaleString('en-GB')}</td>
                   <td className="px-4 text-right">
-                    <Link className="text-brand-700 hover:underline" to={`/leads/${l.lead_id}`}>Open</Link>
+                    <Link className="text-brand-700  underline decoration-brand-400 underline-offset-4" to={`/leads/${l.lead_id}`}>View more</Link>
                   </td>
                 </tr>
               ))}

@@ -151,7 +151,7 @@ export default function AdminDashboard() {
 
                     <td className="py-3 px-4 text-slate-500">
                       {m.created_at
-                        ? new Date(m.created_at).toLocaleDateString()
+                        ? new Date(m.created_at).toLocaleDateString('en-GB')
                         : '—'}
                     </td>
 

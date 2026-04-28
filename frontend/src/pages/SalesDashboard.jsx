@@ -42,7 +42,7 @@ export default function SalesDashboard() {
             {dueToday.map(l => (
               <Link key={l._id} to={`/leads/${l.lead_id}`} className="block border rounded-xl p-3 hover:bg-slate-50 transition">
                 <div className="font-medium">{l.name}</div>
-                <div className="text-xs text-slate-500">{new Date(l.next_followup_at).toLocaleString()}</div>
+                <div className="text-xs text-slate-500">{new Date(l.next_followup_at).toLocaleString('en-GB')}</div>
               </Link>
             ))}
           </div>
@@ -54,7 +54,7 @@ export default function SalesDashboard() {
             {overdue.map(l => (
               <Link key={l._id} to={`/leads/${l.lead_id}`} className="block border border-rose-200 rounded-xl p-3 hover:bg-rose-50 transition">
                 <div className="font-medium">{l.name}</div>
-                <div className="text-xs text-rose-700">Overdue since {new Date(l.next_followup_at).toLocaleString()}</div>
+                <div className="text-xs text-rose-700">Overdue since {new Date(l.next_followup_at).toLocaleString('en-GB')}</div>
               </Link>
             ))}
           </div>
@@ -69,6 +69,7 @@ export default function SalesDashboard() {
                 <th className="py-2">Name</th>
                 <th>Status</th>
                 <th>Temp</th>
+                <th>Pipeline Stage</th>
                 <th>Next Followup</th>
                 <th></th>
               </tr>
@@ -79,8 +80,9 @@ export default function SalesDashboard() {
                   <td className="py-2">{l.name}</td>
                   <td><Badge value={l.status} /></td>
                   <td><Badge value={l.temperature} /></td>
-                  <td>{l.next_followup_at ? new Date(l.next_followup_at).toLocaleString() : '-'}</td>
-                  <td className="text-right"><Link className="text-brand-700 hover:underline" to={`/leads/${l.lead_id}`}>Open</Link></td>
+                  <td>{l.pipeline_stage ? <Badge value={l.pipeline_stage} /> : <span className="text-slate-400">—</span>}</td>
+                  <td>{l.next_followup_at ? new Date(l.next_followup_at).toLocaleString('en-GB') : '-'}</td>
+                  <td className="text-right"><Link className="text-brand-700 underline decoration-brand-400 underline-offset-4" to={`/leads/${l.lead_id}`}>View more</Link></td>
                 </tr>
               ))}
             </tbody>

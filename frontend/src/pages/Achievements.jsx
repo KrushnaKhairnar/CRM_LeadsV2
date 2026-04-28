@@ -32,7 +32,7 @@ export default function Achievements() {
             </div>
             <div className="mt-2 font-medium">{a.title || a.badge_key}</div>
             {a.description && <div className="text-xs text-slate-500 mt-1">{a.description}</div>}
-            {a.created_at && <div className="text-xs text-slate-500 mt-2">Awarded: {new Date(a.created_at).toLocaleString()}</div>}
+            {a.created_at && <div className="text-xs text-slate-500 mt-2">Awarded: {new Date(a.created_at).toLocaleString('en-GB')}</div>}
           </div>
         ))}
         {items.length === 0 && <div className="text-slate-500">No achievements yet.</div>}

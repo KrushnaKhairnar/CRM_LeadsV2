@@ -58,22 +58,21 @@ async def list_leads(
     filters = _filters(status, temperature, pipeline_stage, assigned_to, q)
 
     user_id = str(user["user_id"])
-    user_type = user.get("role", "").lower()
-    print("User Type:", user_type)  # Debug print
+    role = user.get("role", "").upper()
 
     # Role based filter
-    if user_type == "manager":
-        # Manager can see:
-        # 1. Leads created by manager
-        # 2. Leads assigned to manager sales users
+    if role == "ADMIN":
+        role_filter = {}   # all leads
+
+    elif role == "MANAGER":
         role_filter = {
             "$or": [
                 {"created_by": user_id},
                 {"manager_id": user_id}
             ]
         }
-    else:
-        # Normal user can see only own leads
+
+    else:   # SALES
         role_filter = {
             "$or": [
                 {"created_by": user_id},
@@ -81,9 +80,11 @@ async def list_leads(
             ]
         }
 
-    # Merge with other filters
-    if filters:
+    # Merge filters
+    if filters and role_filter:
         final_filter = {"$and": [role_filter, filters]}
+    elif filters:
+        final_filter = filters
     else:
         final_filter = role_filter
 
@@ -101,6 +102,8 @@ async def list_leads(
         "page": page,
         "page_size": page_size
     }
+
+
 @router.get("/export.csv")
 async def export_csv(
     db=Depends(get_db),

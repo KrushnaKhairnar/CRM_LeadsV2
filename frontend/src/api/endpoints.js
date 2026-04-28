@@ -10,12 +10,12 @@ export const UsersAPI = {
   // listSales: () => api.get("/users").then((r) => r.data),
   listManagers: () => api.get("/users/managers").then((r) => r.data),
   updateManager: (id, data) =>
-  api.patch(`/users/managers/${id}`, data).then(r => r.data),
+    api.patch(`/users/managers/${id}`, data).then(r => r.data),
   myTeam: () => api.get("/users/my-team").then((r) => r.data),
   me: () => api.get("/users/me").then((r) => r.data),
   updateMe: (payload) => api.patch("/users/me", payload).then((r) => r.data),
   updateMyTeam: (id, data) =>
-  api.patch(`/users/my-team/${id}`, data).then(r => r.data),
+    api.patch(`/users/my-team/${id}`, data).then(r => r.data),
   lookup: (ids) =>
     api
       .get("/users/lookup", { params: { ids: ids.join(",") } })
@@ -29,9 +29,9 @@ export const projectsAPI = {
   get: (id) => api.get(`/products/${id}`).then(r => r.data),
   create: (payload) => api.post("/products", payload).then((r) => r.data),
   update: (id, payload) =>
-  api.patch(`/products/${id}`, payload).then((r) => r.data),
+    api.patch(`/products/${id}`, payload).then((r) => r.data),
   delete: (id) =>
-  api.post(`/products/${id}/delete`).then((r) => r.data),
+    api.post(`/products/${id}/delete`).then((r) => r.data),
 }
 
 export const analyticsManager = async ({ days = 30 }) => {
@@ -57,7 +57,7 @@ export const LeadsAPI = {
     api.post(`/leads/${id}/notes`, payload).then((r) => r.data),
   bulkAssign: (payload) =>
     api.post(`/leads/bulk/assign`, payload).then((r) => r.data),
-  bulkStatus: (payload) =>  
+  bulkStatus: (payload) =>
     api.patch(`/leads/bulk/status`, payload).then((r) => r.data),
   bulkTemperature: (payload) =>
     api.patch(`/leads/bulk/temperature`, payload).then((r) => r.data),
@@ -77,7 +77,7 @@ export const LeadsAPI = {
     const qs = new URLSearchParams(params || {}).toString();
     return api.defaults.baseURL + `/leads/export.csv${qs ? "?" + qs : ""}`;
   },
-   exportCsv: (params) =>
+  exportCsv: (params) =>
     api.get("/leads/export.csv", {
       params,
       responseType: "blob",

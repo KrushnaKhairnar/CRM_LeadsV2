@@ -7,9 +7,9 @@ export default function InvoicePrint() {
   const { id } = useParams()
   const { data: inv, isLoading } = useQuery({ queryKey: ['invoice', id], queryFn: () => InvoicesAPI.get(id) })
   if (isLoading) return <div>Loading…</div>
-  const subtotal = inv.subtotal.toLocaleString()
-  const tax = inv.tax.toLocaleString()
-  const total = inv.total.toLocaleString()
+  const subtotal = inv.subtotal.toLocaleString('en-GB')
+  const tax = inv.tax.toLocaleString('en-GB')
+  const total = inv.total.toLocaleString('en-GB')
   return (
     <div className="min-h-screen p-8 bg-white text-slate-800">
       <div className="max-w-4xl mx-auto">
@@ -20,9 +20,9 @@ export default function InvoicePrint() {
           </div>
           <div className="text-right">
             <div className="text-sm">Invoice #{inv.invoice_no}</div>
-            <div className="text-xs text-slate-500">Issue: {new Date(inv.issue_date).toLocaleDateString()}</div>
-            {inv.due_date && <div className="text-xs text-slate-500">Due: {new Date(inv.due_date).toLocaleDateString()}</div>}
-            <button onClick={()=>window.print()} className="mt-2 px-3 py-2 rounded-lg border text-sm">Print / Save PDF</button>
+            <div className="text-xs text-slate-500">Issue: {new Date(inv.issue_date).toLocaleDateString('en-GB')}</div>
+            {inv.due_date && <div className="text-xs text-slate-500">Due: {new Date(inv.due_date).toLocaleDateString('en-GB')}</div>}
+            <button onClick={() => window.print()} className="mt-2 px-3 py-2 rounded-lg border text-sm">Print / Save PDF</button>
           </div>
         </div>
 
@@ -55,8 +55,8 @@ export default function InvoicePrint() {
                 <tr key={idx} className="border-t">
                   <td className="py-3 px-4">{it.product}</td>
                   <td className="px-4">{it.quantity}</td>
-                  <td className="px-4">{inv.currency} {Number(it.unit_price).toLocaleString()}</td>
-                  <td className="px-4 text-right">{inv.currency} {(Number(it.quantity)*Number(it.unit_price)).toLocaleString()}</td>
+                  <td className="px-4">{inv.currency} {Number(it.unit_price).toLocaleString('en-GB')}</td>
+                  <td className="px-4 text-right">{inv.currency} {(Number(it.quantity) * Number(it.unit_price)).toLocaleString('en-GB')}</td>
                 </tr>
               ))}
             </tbody>
