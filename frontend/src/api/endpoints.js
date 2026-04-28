@@ -7,7 +7,7 @@ export const AuthAPI = {
 };
 
 export const UsersAPI = {
-  listSales: () => api.get("/users").then((r) => r.data),
+  // listSales: () => api.get("/users").then((r) => r.data),
   listManagers: () => api.get("/users/managers").then((r) => r.data),
   updateManager: (id, data) =>
   api.patch(`/users/managers/${id}`, data).then(r => r.data),

@@ -62,7 +62,7 @@ const Products = () => {
     name: "",
     description: "",
     price: "",
-    is_active: false,
+    is_active: true,
   });
 
   const inputStyle = {
