@@ -18,8 +18,9 @@ async def scan_and_notify(db):
     window_start = now
     window_end = now + timedelta(minutes=5)
 
-    q = {"next_followup_at": {"$gte": window_start, "$lte": window_end}}
-    cur = db.leads.find(q, {"next_followup_at": 1, "name": 1, "assigned_to": 1, "assigned_by": 1})
+    q = {"next_followup_at": {"$gte": window_start, "$lte": window_end}}  
+    # cur = db.leads.find(q, {"next_followup_at": 1, "name": 1, "assigned_to": 1, "assigned_by": 1})
+    cur = db.leads.find(q, {"lead_id": 1, "next_followup_at": 1, "name": 1, "assigned_to": 1, "assigned_by": 1}) 
     async for lead in cur:
         lead_id = lead["lead_id"]
         nfa = lead.get("next_followup_at")
