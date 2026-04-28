@@ -8,6 +8,7 @@ from app.core.deps import get_current_user
 from app.services.access import ensure_can_view
 from app.services.leads_service import LeadsService
 from app.services.followups_service import FollowupsService
+from app.core.deps import get_current_user
 
 from app.models.products import (
     ProductCreate,
@@ -31,25 +32,40 @@ def clean_mongo(doc):
 # ----------------------------
 # ✅ Create Product
 # ----------------------------
+ 
 @router.post("", response_model=ProductOut)
-async def create_product(product: ProductCreate, db=Depends(get_db)):
+async def create_product(
+    product: ProductCreate, 
+    db=Depends(get_db),
+    user=Depends(get_current_user)  # 👈 Add this
+):
     product_dict = product.model_dump()
     product_dict["project_id"] = str(uuid4())
     product_dict["_id"] = product_dict["project_id"]
+    product_dict["created_by"] = user["user_id"]  # 👈 And this
 
     await db["products"].insert_one(product_dict)
-
-    return clean_mongo(product_dict)   
+    return clean_mongo(product_dict)
 
 
 # ----------------------------
 # ✅ Get All Products
 # ----------------------------
+
 @router.get("", response_model=List[ProductOut])
-async def get_products(db=Depends(get_db)):
+async def get_products(
+    db=Depends(get_db),
+    user=Depends(get_current_user)
+):
+    query = {}
+    if user["role"] != "ADMIN":
+        query["created_by"] = user["user_id"]
+
     products = []
-    async for product in db["products"].find():
+
+    async for product in db["products"].find(query):
         products.append(clean_mongo(product))
+
     return products
 
 
@@ -100,41 +116,3 @@ async def delete_product(project_id: str, db=Depends(get_db)):
     return {"message": "Product deleted successfully"}
 
 
-# # ----------------------------
-# # ✅ Add Followup to Product
-# # ----------------------------
-# @router.post(
-#     "/leads/{lead_id}/products/{product_id}/followups",
-#     response_model=dict
-# )
-# async def add_product_followup(
-#     lead_id: str,
-#     product_id: str,
-#     payload: FollowupCreate,
-#     db=Depends(get_db),
-#     user=Depends(get_current_user)
-# ):
-#     # Check lead
-#     lead = await db["leads"].find_one({"lead_id": lead_id})
-#     if not lead:
-#         raise HTTPException(status_code=404, detail="Lead not found")
-
-#     ensure_can_view(user, lead)
-
-#     # Check product under lead
-#     svc = LeadsService(db)
-#     product = await svc.get_product(lead_id, product_id)
-#     if not product:
-#         raise HTTPException(status_code=404, detail="Product not found")
-
-#     # Create followup
-#     followup_payload = payload.model_dump()
-#     followup_payload["product_id"] = product_id
-
-#     fsvc = FollowupsService(db)
-#     f = await fsvc.add_followup(lead_id, followup_payload, user)
-
-#     return {
-#         "followup": clean_mongo(f),
-#         "badge": "Followup Updated"
-#     }
