@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, File, UploadFile,Form
 from typing import Optional
 from datetime import datetime
 import csv, io
@@ -259,6 +259,7 @@ async def add_note(lead_id: str, payload: NoteCreate, db=Depends(get_db), user=D
 @router.post("/bulk/csv", response_model=dict)
 async def bulk_csv_upload(
     file: UploadFile = File(...),
+    project_id: Optional[str] =Form(None),
     db=Depends(get_db),
     user=Depends(get_current_user)
 ):
@@ -278,6 +279,9 @@ async def bulk_csv_upload(
         if not row or not row.get('name'):
             continue
         try:
+            # leads_to_create.append(LeadCreate(**row, project_id=project_id).model_dump())
+            if project_id:
+                row["project_id"] = project_id
             leads_to_create.append(LeadCreate(**row).model_dump())
         except Exception as e:
             print(f"Skipping row due to validation error: {row} - {e}")
