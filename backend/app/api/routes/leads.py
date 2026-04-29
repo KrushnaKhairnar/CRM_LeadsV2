@@ -31,10 +31,39 @@ def _filters(status: Optional[str], temperature: Optional[str], pipeline_stage: 
         f["$or"] = [{"name": rx}, {"phone": rx}, {"company": rx}]
     return f
 
+# @router.post("", response_model=LeadOut)
+# async def create_lead(payload: LeadCreate, db=Depends(get_db), user=Depends(get_current_user)):
+#     svc = LeadsService(db)
+#     lead = await svc.create_lead(payload.model_dump(), user)
+#     return lead
+
 @router.post("", response_model=LeadOut)
-async def create_lead(payload: LeadCreate, db=Depends(get_db), user=Depends(get_current_user)):
+async def create_lead(
+    payload: LeadCreate,
+    db=Depends(get_db),
+    user=Depends(get_current_user)
+):
+    # ✅ Project mandatory
+    if not payload.project_id or not str(payload.project_id).strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Project is required"
+        )
+
+    # ✅ Check project exists
+    project = await db.products.find_one({
+        "project_id": payload.project_id
+    })
+
+    if not project:
+        raise HTTPException(
+            status_code=404,
+            detail="Selected project not found"
+        )
+
     svc = LeadsService(db)
     lead = await svc.create_lead(payload.model_dump(), user)
+
     return lead
 
 

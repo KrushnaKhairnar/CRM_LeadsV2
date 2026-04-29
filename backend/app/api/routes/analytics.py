@@ -41,19 +41,43 @@ async def manager_analytics(
 
     start_aware, end_aware = _range(days)
 
-    # ✅ Use naive UTC for Mongo query bounds (avoids driver tz mismatches)
+    # Mongo naive UTC
     start = start_aware.replace(tzinfo=None)
     end = end_aware.replace(tzinfo=None)
 
-    q = {"created_at": {"$gte": start, "$lte": end}}
+    # ✅ Get this manager + his sales team ids
+    team_ids = [user["user_id"]]
+
+    sales_users = await db.users.find(
+        {"manager_id": user["user_id"]}
+    ).to_list(None)
+
+    team_ids.extend([u["user_id"] for u in sales_users])
+
+    # ✅ Show only this manager team leads
+    q = {
+        "created_at": {"$gte": start, "$lte": end},
+        "$or": [
+            {"created_by": {"$in": team_ids}},
+            {"assigned_to": {"$in": team_ids}},
+            {"assigned_by": user["user_id"]},
+        ]
+    }
+
     leads = [l async for l in db.leads.find(q)]
 
-    total = len(leads)
+    total = len(leads)-1
+
     by_status = Counter([l.get("status", "OPEN") for l in leads])
     by_temp = Counter([l.get("temperature", "COLD") for l in leads])
     by_sales = Counter([l.get("assigned_to") or "UNASSIGNED" for l in leads])
+
     conversions = Counter(
-        [l.get("pipeline_stage") for l in leads if l.get("pipeline_stage") in ("WON", "LOST")]
+        [
+            l.get("pipeline_stage")
+            for l in leads
+            if l.get("pipeline_stage") in ("WON", "LOST")
+        ]
     )
 
     overdue = 0
@@ -65,7 +89,6 @@ async def manager_analytics(
     day_end = day_start + timedelta(days=1)
 
     for l in leads:
-        # ✅ Normalize potentially naive datetimes from Mongo
         nfa = ensure_utc(l.get("next_followup_at"))
         updated_at = ensure_utc(l.get("updated_at"))
 
@@ -75,35 +98,59 @@ async def manager_analytics(
         if nfa and day_start <= nfa < day_end:
             today_followups += 1
 
-        if updated_at and day_start <= updated_at < day_end and l.get("status") in ("CLOSED", "LOST"):
+        if (
+            updated_at
+            and day_start <= updated_at < day_end
+            and l.get("status") in ("CLOSED", "LOST")
+        ):
             today_closed += 1
 
-    # Lead aging buckets by created_at
-    aging_buckets = {"0-7": 0, "8-30": 0, "31-90": 0, "91+": 0}
+    # Aging
+    aging_buckets = {
+        "0-7": 0,
+        "8-30": 0,
+        "31-90": 0,
+        "91+": 0
+    }
+
     for l in leads:
         ca = ensure_utc(l.get("created_at"))
         if not ca:
             continue
-        days = max(0, int((datetime.now(timezone.utc) - ca).days))
-        if days <= 7:
+
+        age_days = max(0, int((now - ca).days))
+
+        if age_days <= 7:
             aging_buckets["0-7"] += 1
-        elif days <= 30:
+        elif age_days <= 30:
             aging_buckets["8-30"] += 1
-        elif days <= 90:
+        elif age_days <= 90:
             aging_buckets["31-90"] += 1
         else:
             aging_buckets["91+"] += 1
 
-    # Conversion funnel by pipeline_stage
-    STAGES = ["NEW","CONTACTED","DEMO","PROPOSAL","NEGOTIATION","WON","LOST"]
+    # Funnel
+    STAGES = [
+        "NEW",
+        "CONTACTED",
+        "DEMO",
+        "PROPOSAL",
+        "NEGOTIATION",
+        "WON",
+        "LOST",
+    ]
+
     stage_counts = {s: 0 for s in STAGES}
+
     for l in leads:
         s = l.get("pipeline_stage") or "NEW"
         if s in stage_counts:
             stage_counts[s] += 1
-    won_count = stage_counts.get("WON", 0)
-    lost_count = stage_counts.get("LOST", 0)
-    win_rate = (won_count / max(1, (won_count + lost_count)))
+
+    won_count = stage_counts["WON"]
+    lost_count = stage_counts["LOST"]
+
+    win_rate = won_count / max(1, won_count + lost_count)
 
     return {
         "range_days": days,
@@ -116,7 +163,12 @@ async def manager_analytics(
         "today_followups": today_followups,
         "today_closed": today_closed,
         "aging": aging_buckets,
-        "funnel": {"stages": stage_counts, "won": won_count, "lost": lost_count, "win_rate": win_rate},
+        "funnel": {
+            "stages": stage_counts,
+            "won": won_count,
+            "lost": lost_count,
+            "win_rate": win_rate,
+        },
     }
 
 @router.get("/revenue/manager", response_model=dict)

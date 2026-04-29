@@ -9,8 +9,9 @@ export const useAuthStore = create((set, get) => ({
     set({ token })
   },
   clear: () => {
-    localStorage.removeItem('token')
-    set({ token: null, user: null })
-  },
+  console.trace("🚨 LOGOUT TRIGGERED FROM:");
+  localStorage.removeItem("token");
+  set({ token: null, user: null });
+},
   setUser: (user) => set({ user }),
 }))

@@ -1,69 +1,67 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Clock, Pencil, Shield, UserPlus, Users2 } from 'lucide-react'
-import { useState } from 'react'
-import { toast } from 'sonner'
-import { UsersAPI } from '../api/endpoints'
-import RegisterUserModal from './components/RegisterUserModal'
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Clock, Pencil, Shield, UserPlus, Users2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { UsersAPI } from "../api/endpoints";
+import RegisterUserModal from "./components/RegisterUserModal";
 
 export default function AdminDashboard() {
-  const qc = useQueryClient()
-  const [openRegister, setOpenRegister] = useState(false)
+  const qc = useQueryClient();
+  const [openRegister, setOpenRegister] = useState(false);
 
   const { data: managers, isLoading } = useQuery({
-    queryKey: ['managers'],
+    queryKey: ["managers"],
     queryFn: () => UsersAPI.listManagers(),
-  })
+  });
 
-
-  const [openEdit, setOpenEdit] = useState(false)
-  const [selected, setSelected] = useState(null)
+  const [openEdit, setOpenEdit] = useState(false);
+  const [selected, setSelected] = useState(null);
 
   const [form, setForm] = useState({
-    username: '',
-    email: '',
-    is_active: true
-  })
-
+    username: "",
+    email: "",
+    is_active: true,
+  });
 
   const openEditModal = (manager) => {
-    setSelected(manager)
+    setSelected(manager);
 
     setForm({
-      username: manager.username || '',
-      email: manager.email || '',
-      is_active: manager.is_active ?? true
-    })
+      username: manager.username || "",
+      email: manager.email || "",
+      is_active: manager.is_active ?? true,
+    });
 
-    setOpenEdit(true)
-  }
-
+    setOpenEdit(true);
+  };
 
   const saveManager = async () => {
     try {
-      await UsersAPI.updateManager(selected.user_id, form)
+      await UsersAPI.updateManager(selected.user_id, form);
 
-      qc.invalidateQueries({ queryKey: ['managers'] })
+      qc.invalidateQueries({ queryKey: ["managers"] });
 
-      toast.success('Manager updated successfully')
+      toast.success("Manager updated successfully");
 
-      setOpenEdit(false)
-
+      setOpenEdit(false);
     } catch (error) {
       if (error.response?.status === 400) {
-        toast.error('Username already exists, Please Choose another username')
+        toast.error("Username already exists, Please Choose another username");
       } else {
-        toast.error('Username already exists, Choose another username ')
+        toast.error("Username already exists, Choose another username ");
       }
     }
-  }
+  };
 
-  const managerCount = managers?.length || 0
+  const managerCount = managers?.length || 0;
 
   return (
     <div className="space-y-6 animate-in-up">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-2xl font-semibold tracking-tight">Admin Dashboard</div>
+          <div className="text-2xl font-semibold tracking-tight">
+            Admin Dashboard
+          </div>
           <div className="text-sm text-slate-500">
             Manage your organization's team hierarchy
           </div>
@@ -133,56 +131,59 @@ export default function AdminDashboard() {
               )}
 
               {!isLoading &&
-                (managers || []).map((m, idx) => (
-                  <tr
-                    key={m.user_id}
-                    className="border-t odd:bg-white even:bg-slate-50/60"
-                  >
-                    <td className="py-3 px-4 text-slate-400">{idx + 1}</td>
+                (managers || [])
+                  .sort((a, b) => b.user_id.localeCompare(a.user_id))
+                  .map((m, idx) => (
+                    <tr
+                      key={m.user_id}
+                      className="border-t odd:bg-white even:bg-slate-50/60"
+                    >
+                      <td className="py-3 px-4 text-slate-400">{idx + 1}</td>
 
-                    <td className="py-3 px-4 font-medium">{m.username}</td>
+                      <td className="py-3 px-4 font-medium">{m.username}</td>
 
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-medium">
-                        <Shield size={12} />
-                        {m.role}
-                      </span>
-                    </td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-medium">
+                          <Shield size={12} />
+                          {m.role}
+                        </span>
+                      </td>
 
-                    <td className="py-3 px-4 text-slate-500">
-                      {m.created_at
-                        ? new Date(m.created_at).toLocaleDateString('en-GB')
-                        : '—'}
-                    </td>
+                      <td className="py-3 px-4 text-slate-500">
+                        {m.created_at
+                          ? new Date(m.created_at).toLocaleDateString("en-GB")
+                          : "—"}
+                      </td>
 
-                    <td className="py-3 px-4 text-xs font-mono text-slate-400">
-                      {m.user_id?.slice(0, 8)}...
-                    </td>
+                      <td className="py-3 px-4 text-xs font-mono text-slate-400">
+                        {m.user_id}
+                      </td>
 
-                    {/* STATUS */}
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${m.is_active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
+                      {/* STATUS */}
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            m.is_active
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
                           }`}
-                      >
-                        {m.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
+                        >
+                          {m.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
 
-                    {/* EDIT */}
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => openEditModal(m)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-xs"
-                      >
-                        <Pencil size={14} />
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      {/* EDIT */}
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => openEditModal(m)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-xs"
+                        >
+                          <Pencil size={14} />
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
             </tbody>
           </table>
         </div>
@@ -192,30 +193,24 @@ export default function AdminDashboard() {
         open={openRegister}
         onClose={() => setOpenRegister(false)}
         role="MANAGER"
-        onCreated={() => qc.invalidateQueries({ queryKey: ['managers'] })}
+        onCreated={() => qc.invalidateQueries({ queryKey: ["managers"] })}
       />
-
 
       {openEdit && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
-
             <h2 className="text-xl font-semibold">Edit Manager</h2>
 
             <input
               value={form.username}
-              onChange={(e) =>
-                setForm({ ...form, username: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
               placeholder="Username"
               className="w-full border rounded-lg px-3 py-2"
             />
 
             <input
               value={form.email}
-              onChange={(e) =>
-                setForm({ ...form, email: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="Email"
               className="w-full border rounded-lg px-3 py-2"
             />
@@ -236,7 +231,7 @@ export default function AdminDashboard() {
 
             <div className="flex items-center justify-between border rounded-xl px-4 py-3">
               <span className="font-medium text-slate-700">
-                {form.is_active ? 'Active' : 'Inactive'}
+                {form.is_active ? "Active" : "Inactive"}
               </span>
 
               <button
@@ -244,15 +239,17 @@ export default function AdminDashboard() {
                 onClick={() =>
                   setForm({
                     ...form,
-                    is_active: !form.is_active
+                    is_active: !form.is_active,
                   })
                 }
-                className={`w-10 h-6 flex items-center rounded-full p-1 transition ${form.is_active ? 'bg-green-500' : 'bg-red-500'
-                  }`}
+                className={`w-10 h-6 flex items-center rounded-full p-1 transition ${
+                  form.is_active ? "bg-green-500" : "bg-red-500"
+                }`}
               >
                 <div
-                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${form.is_active ? 'translate-x-4' : ''
-                    }`}
+                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${
+                    form.is_active ? "translate-x-4" : ""
+                  }`}
                 />
               </button>
             </div>
@@ -272,12 +269,11 @@ export default function AdminDashboard() {
                 Save
               </button>
             </div>
-
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function StatCard({ icon, title, value, gradient }) {
@@ -296,5 +292,5 @@ function StatCard({ icon, title, value, gradient }) {
         </div>
       </div>
     </div>
-  )
+  );
 }

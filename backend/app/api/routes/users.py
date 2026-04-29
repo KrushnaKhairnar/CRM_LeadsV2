@@ -84,45 +84,7 @@ async def list_my_team(db=Depends(get_db), user=Depends(require_roles([Roles.MAN
         }
         for u in users
     ]
-# ------ MANAGERS CAN UPDATE STATUS OF SALES PERSONS----------#
 
-# @router.patch("/my-team/{user_id}", response_model=dict)
-# async def update_sales_status(
-#     user_id: str,
-#     payload: UserUpdateByManager,
-#     db=Depends(get_db),
-#     user=Depends(require_roles([Roles.MANAGER]))
-# ):
-#     member = await db.users.find_one({
-#         "user_id": user_id,
-#         "created_by": user["user_id"],
-#         "role": "SALES"
-#     })
-
-#     if not member:
-#         raise HTTPException(status_code=404, detail="Sales user not found")
-
-#     await db.users.update_one(
-#         {"user_id": user_id},
-#         {
-#             "$set": {
-#                 "is_active": payload.is_active
-#             }
-#         }
-#     )
-
-#     updated = await db.users.find_one({"user_id": user_id})
-
-#     return {
-#         "message": "Status updated successfully",
-#         "user_id": updated["user_id"],
-#         "username": updated["username"],
-#         "is_active": updated["is_active"]
-#     }
-
-
-
-#     from fastapi import HTTPException
 
 @router.patch("/managers/{user_id}", response_model=dict)
 async def update_manager(

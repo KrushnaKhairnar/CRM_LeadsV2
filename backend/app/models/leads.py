@@ -15,7 +15,7 @@ class LeadBase(BaseModel):
     email: Optional[str] = Field(default=None, max_length=200)
     company: Optional[str] = Field(default=None, max_length=200)
     source: Optional[str] = Field(default=None, max_length=100)
-    project_id: Optional[str] = None
+    project_id: str = Field(..., min_length=1)
     purpose: Optional[str] = Field(default=None, max_length=2000)
     status: Status = "OPEN"
     temperature: Temperature = "COLD"
