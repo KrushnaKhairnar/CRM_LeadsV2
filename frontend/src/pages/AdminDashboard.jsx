@@ -132,7 +132,7 @@ export default function AdminDashboard() {
 
               {!isLoading &&
                 (managers || [])
-                  .sort((a, b) => b.user_id.localeCompare(a.user_id))
+                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                   .map((m, idx) => (
                     <tr
                       key={m.user_id}
