@@ -141,7 +141,7 @@ export default function ManagerDashboard() {
         <Card title="Today's Followups" value={data?.today_followups ?? 0} />
         <Card
           title="Revenue (today)"
-          value={(rev?.today ?? 0).toLocaleString("en-GB")}
+          value={(rev?.today_total ?? 0).toLocaleString("en-GB")}
         />
       </div>
 

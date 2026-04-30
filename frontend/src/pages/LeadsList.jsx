@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, Fragment } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LeadsAPI, UsersAPI, ViewsAPI, projectsAPI} from "../api/endpoints";
+import { LeadsAPI, UsersAPI, ViewsAPI, projectsAPI } from "../api/endpoints";
 import { Link, useSearchParams } from "react-router-dom";
 import Badge from "../components/Badge";
 import { useAuthStore } from "../auth/store";
@@ -586,31 +586,20 @@ export default function LeadsList() {
       /> */}
 
       <BulkCsvImportModal
-  open={openCsvImport}
-  onClose={() => setOpenCsvImport(false)}
-  onConfirm={async ({ file, project_id }) => {
-    try {
-      const formData = new FormData();
+        open={openCsvImport}
+        onClose={() => setOpenCsvImport(false)}
+        onConfirm={async ({ file, project_id }) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("project_id", project_id);
 
-      formData.append("file", file);
-      formData.append("project_id", project_id);
+          const result = await LeadsAPI.bulkCsvUpload(formData);
 
-      const result = await LeadsAPI.bulkCsvUpload(formData);
-
-      toast.success(
-        `${result.created_count} leads imported successfully`
-      );
-
-      setOpenCsvImport(false);
-      qc.invalidateQueries({ queryKey: ["leads"] });
-
-    } catch (e) {
-      toast.error(
-        e.response?.data?.detail || "CSV import failed"
-      );
-    }
-  }}
-/>
+          toast.success(`${result.created_count} leads imported successfully`);
+          setOpenCsvImport(false);
+          qc.invalidateQueries({ queryKey: ["leads"] });
+        }}
+      />
     </div>
   );
 }
@@ -935,43 +924,45 @@ function BulkCsvImportModal({ open, onClose, onConfirm }) {
   const [file, setFile] = useState(null);
   const [products, setProducts] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
+  const [loading, setLoading] = useState(false);
 
-useEffect(() => {
-  const fetchProjects = async () => {
-    try {
-      const res = await projectsAPI.list();
-      setProducts(res || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // Reset state every time modal opens
+  useEffect(() => {
+    if (!open) return;
 
-  if (open) fetchProjects();
-}, [open]);
+    setFile(null);
+    setSelectedProject("");
+
+    const fetchProjects = async () => {
+      try {
+        const res = await projectsAPI.list();
+        setProducts(res || []);
+      } catch (err) {
+        console.error("Failed to fetch projects:", err);
+      }
+    };
+
+    fetchProjects();
+  }, [open]);
 
   const handleFileChange = (e) => {
-    if (e.target.files?.length) {
-      setFile(e.target.files[0]);
-    }
+    setFile(e.target.files?.[0] || null);
   };
 
-  const confirm = () => {
-    if (!file || !selectedProject) return;
+  const confirm = async () => {
+    if (!file || !selectedProject || loading) return;
 
-    onConfirm({
-      file,
-      project_id: selectedProject,
-    });
+    setLoading(true);
+    try {
+      await onConfirm({ file, project_id: selectedProject });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Transition appear show={open} as={Fragment}>
-      <Dialog
-        as="div"
-        open={open}
-        onClose={onClose}
-        className="relative z-50"
-      >
+      <Dialog as="div" open={open} onClose={onClose} className="relative z-50">
         {/* Overlay */}
         <Transition.Child
           as={Fragment}
@@ -982,10 +973,7 @@ useEffect(() => {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div
-            className="fixed inset-0 bg-black/30"
-            aria-hidden="true"
-          />
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         </Transition.Child>
 
         {/* Modal */}
@@ -1014,21 +1002,14 @@ useEffect(() => {
                   <label className="mb-1 block text-sm font-medium">
                     Select Project
                   </label>
-
                   <select
                     value={selectedProject}
-                    onChange={(e) =>
-                      setSelectedProject(e.target.value)
-                    }
+                    onChange={(e) => setSelectedProject(e.target.value)}
                     className="w-full rounded-lg border px-3 py-2 text-sm"
                   >
                     <option value="">Select Project</option>
-
                     {products.map((p) => (
-                      <option
-                        key={p.project_id}
-                        value={p.project_id}
-                      >
+                      <option key={p.project_id} value={p.project_id}>
                         {p.name}
                       </option>
                     ))}
@@ -1040,13 +1021,16 @@ useEffect(() => {
                   <label className="mb-1 block text-sm font-medium">
                     Upload CSV File
                   </label>
-
                   <input
                     type="file"
                     accept=".csv"
                     onChange={handleFileChange}
                     className="w-full rounded-lg border px-3 py-2 text-sm"
                   />
+                  {/* Show selected filename */}
+                  {file && (
+                    <p className="mt-1 text-xs text-slate-500">{file.name}</p>
+                  )}
                 </div>
 
                 {/* Buttons */}
@@ -1054,18 +1038,18 @@ useEffect(() => {
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-lg border px-3 py-2 text-sm"
+                    disabled={loading}
+                    className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
                   >
                     Cancel
                   </button>
-
                   <button
                     type="button"
                     onClick={confirm}
-                    disabled={!file || !selectedProject}
+                    disabled={!file || !selectedProject || loading}
                     className="rounded-lg bg-brand-600 px-3 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
                   >
-                    Import
+                    {loading ? "Importing…" : "Import"}
                   </button>
                 </div>
               </Dialog.Panel>

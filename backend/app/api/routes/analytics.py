@@ -205,6 +205,7 @@ async def revenue_manager(
     invs = [i for i in invs_all if in_period(i)]
     today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc).replace(tzinfo=None)
     today_total = sum(float(i.get("total", 0)) for i in invs if i.get("created_at") and i["created_at"] >= today_start)
+    print("Todays total:", today_total)
     # last 15 days timeseries
     buckets = {}
     for i in range(15):

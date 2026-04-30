@@ -23,11 +23,15 @@ router = APIRouter()
 # ----------------------------
 # 🔧 Helper
 # ----------------------------
+# def clean_mongo(doc):
+#     if doc:
+#         doc.pop("_id", None)
+#     return doc
 def clean_mongo(doc):
     if doc:
+        doc["project_id"] = str(doc["_id"])  # ← capture _id as project_id first
         doc.pop("_id", None)
     return doc
-
 
 # ----------------------------
 # ✅ Create Product
@@ -57,17 +61,33 @@ async def get_products(
     db=Depends(get_db),
     user=Depends(get_current_user)
 ):
-    query = {}
-    if user["role"] != "ADMIN":
-        query["created_by"] = user["user_id"]
+    if user["role"] == "ADMIN":
+        query = {}
+
+    elif user["role"] == "MANAGER":
+        query = {"created_by": user["user_id"]}
+
+    elif user["role"] == "SALES":
+        sales_user = await db["users"].find_one({"user_id": user["user_id"]})
+
+        if not sales_user:
+            return []
+
+        manager_id = sales_user.get("created_by")
+
+        if not manager_id:
+            return []
+
+        query = {"created_by": manager_id}
+
+    else:
+        return []
 
     products = []
-
     async for product in db["products"].find(query):
         products.append(clean_mongo(product))
 
     return products
-
 
 # ----------------------------
 # ✅ Get Single Product
