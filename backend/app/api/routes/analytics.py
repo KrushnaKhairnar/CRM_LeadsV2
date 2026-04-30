@@ -4,6 +4,7 @@ from collections import Counter
 from app.db.mongo import get_db
 from app.core.deps import get_current_user
 from app.services.access import ensure_manager
+from datetime import timedelta
 
 router = APIRouter()
 
@@ -66,7 +67,7 @@ async def manager_analytics(
 
     leads = [l async for l in db.leads.find(q)]
 
-    total = len(leads)-1
+    total = len(leads)
 
     by_status = Counter([l.get("status", "OPEN") for l in leads])
     by_temp = Counter([l.get("temperature", "COLD") for l in leads])
@@ -181,12 +182,19 @@ async def revenue_manager(
     currency: str | None = None,
 ):
     ensure_manager(user)
-    from datetime import timedelta
+   
     now = datetime.now(timezone.utc)
     start = now - timedelta(days=days)
     start_naive = start.replace(tzinfo=None)
+    # Get this manager + his sales team ids
+    team_ids = [user["user_id"]]
+    sales_users = await db.users.find(
+        {"manager_id": user["user_id"]}
+    ).to_list(None)
+    team_ids.extend([u["user_id"] for u in sales_users])
+
     # Base filter (all-time dims)
-    q_base = {}
+    q_base = {"sales_user_id": {"$in": team_ids}}
     if sales_user_id:
         q_base["sales_user_id"] = sales_user_id
     if status:
@@ -226,7 +234,10 @@ async def revenue_manager(
     # Lead-based revenue (fallback/augment):
     # - won_from_leads: sum of expected_value for WON or CLOSED leads updated in period
     # - pipeline_open: sum of expected_value for OPEN/WIP leads (pipeline) created or updated in period
-    lead_q: dict = {"$or": [{"updated_at": {"$gte": start_naive}}, {"created_at": {"$gte": start_naive}}]}
+    lead_q: dict = {
+        "$or": [{"updated_at": {"$gte": start_naive}}, {"created_at": {"$gte": start_naive}}],
+        "assigned_to": {"$in": team_ids}
+    }
     if sales_user_id:
         lead_q["$or"] = lead_q.get("$or", []) + [{"assigned_to": sales_user_id}, {"created_by": sales_user_id}]
     leads = [l async for l in db.leads.find(lead_q)]
