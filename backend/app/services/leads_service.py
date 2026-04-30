@@ -33,7 +33,14 @@ class LeadsService:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail={"message":"Possible duplicate lead", "duplicates":[{"lead_id": d.get("lead_id"), "name": d.get("name"), "phone": d.get("phone"), "email": d.get("email"), "company": d.get("company")} for d in dups]})
         doc = dict(data)
         doc["created_by"] = actor["user_id"]
-        doc["manager_id"] = actor["created_by"]
+        # Set manager_id based on user role
+        role = actor.get("role", "").upper()
+        if role == "MANAGER":
+            doc["manager_id"] = actor["user_id"]
+        elif role == "SALES":
+            doc["manager_id"] = actor.get("created_by")
+        else:
+            doc["manager_id"] = None
         doc["assigned_to"] = None
         doc["assigned_by"] = None
         doc["assigned_at"] = None
