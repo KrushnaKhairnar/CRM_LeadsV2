@@ -14,6 +14,7 @@ async def create_invoice(payload: InvoiceCreate, db=Depends(get_db), user=Depend
     doc = await repo.create(payload.model_dump(), user["user_id"])
     return doc
 
+
 @router.get("", response_model=dict)
 async def list_invoices(
     db=Depends(get_db),
@@ -25,12 +26,32 @@ async def list_invoices(
 ):
     repo = InvoicesRepository(db)
     q = {}
-    if user["role"] != "MANAGER":
+
+    if user["role"] == "MANAGER" or user["role"] == "SALES":
+        # Get only sales users created by this manager
+        sales_users = await db.users.find(
+            {"created_by": user["user_id"], "role": "SALES"}
+        ).to_list(None)
+
+        sales_ids = [u["user_id"] for u in sales_users]
+        team_ids = [user["user_id"]] + sales_ids
+
+        if sales_user_id:
+            # Security check: requested sales user must belong to this manager
+            if sales_user_id not in team_ids:
+                raise HTTPException(status_code=403, detail="User not in your team")
+            q["sales_user_id"] = sales_user_id
+        else:
+            # Scope to this manager's team only
+            q["sales_user_id"] = {"$in": team_ids}
+
+    else:
+        # SALES user: can only see their own invoices
         q["sales_user_id"] = user["user_id"]
-    elif sales_user_id:
-        q["sales_user_id"] = sales_user_id
+
     if status:
         q["status"] = status
+
     items, total = await repo.list(q, page, page_size)
     return {"items": items, "total": total, "page": page, "page_size": page_size}
 

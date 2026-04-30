@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { Users2, User, Calendar, ShieldCheck } from 'lucide-react'
+import { Users2, User, Calendar, ShieldCheck, UserPlus } from 'lucide-react'
 import { UsersAPI } from '../api/endpoints'
+import RegisterUserModal from "./components/RegisterUserModal";
 
 export default function MyTeam() {
   const [team, setTeam] = useState([])
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState(null)
+  const [openRegister, setOpenRegister] = useState(false);
 
   useEffect(() => {
     loadTeam()
@@ -25,11 +27,9 @@ export default function MyTeam() {
   const toggleStatus = async (member) => {
     try {
       setUpdatingId(member.user_id)
-
       await UsersAPI.updateMyTeam(member.user_id, {
         is_active: !member.is_active,
       })
-
       setTeam((prev) =>
         prev.map((item) =>
           item.user_id === member.user_id
@@ -51,15 +51,40 @@ export default function MyTeam() {
     })
   }
 
+  // ✅ Called after successful registration — reloads team list
+  const handleCreated = () => {
+    setLoading(true)
+    loadTeam()
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <Users2 size={24} className="text-brand-600" />
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
-          My Team
-        </h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users2 size={24} className="text-brand-600" />
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
+            My Team
+          </h1>
+        </div>
+
+        {/* ✅ Register button */}
+        <button
+          onClick={() => setOpenRegister(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 text-white hover:from-brand-700 hover:to-accent-700 text-sm shadow-soft transition"
+        >
+          <UserPlus size={16} />
+          Register Sales Person
+        </button>
       </div>
+
+      {/* ✅ RegisterUserModal — no qc needed, uses local loadTeam instead */}
+      <RegisterUserModal
+        open={openRegister}
+        onClose={() => setOpenRegister(false)}
+        role="SALES"
+        onCreated={handleCreated}
+      />
 
       {/* Loading */}
       {loading && (
@@ -126,13 +151,7 @@ export default function MyTeam() {
               {/* Status Text */}
               <p className="mt-4 text-sm font-medium">
                 Status:{' '}
-                <span
-                  className={
-                    member.is_active
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }
-                >
+                <span className={member.is_active ? 'text-green-600' : 'text-red-600'}>
                   {updatingId === member.user_id
                     ? 'Updating...'
                     : member.is_active
