@@ -139,7 +139,7 @@ export default function MyTeam() {
 
                 <p className="flex items-center gap-2">
                   <User size={16} />
-                  ID: {member.user_id.slice(0, 8)}...
+                  ID: {member.user_id}
                 </p>
 
                 <p className="flex items-center gap-2">

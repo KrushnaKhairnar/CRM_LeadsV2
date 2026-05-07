@@ -15,6 +15,7 @@ class UsersRepository:
             "username": username,
             "password_hash": hash_password(password),
             "role": role,
+            "is_active": True,
             "created_by": created_by,
             "created_at": now_utc(),
         }
@@ -42,7 +43,7 @@ class UsersRepository:
         cur = self.db.users.find(
             {"role": "SALES", "created_by": manager_id},
             {"password_hash": 0}
-        ).sort("username", 1)
+        ).sort("created_at", -1)
         return [doc async for doc in cur]
 
     async def update_profile(self, user_id: str, patch: dict) -> Optional[dict]:
