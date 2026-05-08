@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field,EmailStr
 from typing import Literal, Optional
 from app.models.common import now_utc
 from datetime import datetime
@@ -8,6 +8,7 @@ Role = Literal["ADMIN", "MANAGER", "SALES"]
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=4, max_length=128)
+    email: Optional[EmailStr] = None
     role: Role
     is_active: bool = True
 

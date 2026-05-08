@@ -1065,9 +1065,6 @@ function FollowupModal({
       done_at: toLocalISOString(doneAt), // ✅ keeps selected time
       note,
       outcome,
-      point_of_contact_name: null,
-      point_of_contact_phone: null,
-      point_of_contact_email: null,
       next_followup_at: nextAt ? toLocalISOString(nextAt) : null,
     };
 

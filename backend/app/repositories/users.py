@@ -14,6 +14,7 @@ class UsersRepository:
             "user_id": uid,
             "username": username,
             "password_hash": hash_password(password),
+            "email": "xyz@didikore.com",
             "role": role,
             "is_active": True,
             "created_by": created_by,
