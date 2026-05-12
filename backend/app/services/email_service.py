@@ -3,9 +3,8 @@ from pathlib import Path
 import smtplib, os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from dotenv import load_dotenv
-from jinja2 import Template
-from typing import Dict
+from dotenv import load_dotenv # pyright: ignore[reportMissingImports]
+import aiosmtplib # pyright: ignore[reportMissingImports]
 
 router = APIRouter()
 
@@ -19,36 +18,81 @@ EMAIL_HOST_PASSWORD = os.getenv("SMTP_PASS")
 DEFAULT_FROM_EMAIL = os.getenv("SMTP_FROM")
 
 
-def send_html_email(subject: str, recipient: str, template_name: str, context: Dict[str, str]):
+async def send_email(
+    to: str,
+    subject: str,
+    body: str,
+    lead_name: str = "",
+    followup_time: str = "",
+    lead_link: str = "",
+):
+
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+    TEMPLATE_DIR = BASE_DIR / "EmailTemplates"
+
+    load_dotenv(Path(BASE_DIR / ".env"))
+
+    SMTP_HOST = os.getenv("SMTP_HOST")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+    SMTP_USER = os.getenv("SMTP_USER")
+    SMTP_PASS = os.getenv("SMTP_PASS")
+    SMTP_FROM = os.getenv("SMTP_FROM")
+
+    if not all([
+        SMTP_HOST,
+        SMTP_PORT,
+        SMTP_USER,
+        SMTP_PASS,
+        SMTP_FROM,
+    ]):
+        print("SMTP environment variables missing")
+        return
+
+    # Read HTML template
+    template_path = TEMPLATE_DIR / "followUpEmail.html"
+
+    with open(template_path, "r", encoding="utf-8") as f:
+        html_template = f.read()
+
+    # Replace placeholders
+    html_body = (
+        html_template
+        .replace("{{lead_name}}", lead_name)
+        .replace("{{followup_time}}", followup_time)
+        .replace("{{lead_link}}", lead_link)
+        .replace("{{message}}", body)
+    )
+
+    msg = MIMEMultipart("alternative")
+
+    msg["From"] = SMTP_FROM
+    msg["To"] = to
+    msg["Subject"] = subject
+
+    # Plain text fallback
+    text_part = MIMEText(body, "plain")
+
+    # HTML email
+    html_part = MIMEText(html_body, "html")
+
+    msg.attach(text_part)
+    msg.attach(html_part)
+
     try:
-        BASE_DIR = Path(__file__).resolve().parent.parent
-        templates_path = BASE_DIR / "templates"
-        template_file = templates_path / template_name
 
-        # Load and render the HTML template with context
-        html_template = Path(template_file).read_text(encoding="utf-8")
-        template = Template(html_template)
-        rendered_html = template.render(**context)
-
-        # Create message container
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = DEFAULT_FROM_EMAIL
-        msg['To'] = recipient
-
-        # Attach HTML content
-        msg.attach(MIMEText(rendered_html, 'html'))
-
-        # Connect to SMTP server and send email
-        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
-            server.starttls()
-            server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
-            server.sendmail(DEFAULT_FROM_EMAIL, recipient, msg.as_string())
-
-        return True
+        await aiosmtplib.send(
+            msg,
+            hostname=SMTP_HOST,
+            port=SMTP_PORT,
+            username=SMTP_USER,
+            password=SMTP_PASS,
+            start_tls=True,
+            timeout=30,
+        )
     except Exception as ex:
         # Notify you via email if sending fails
-        notify_admin_of_failure(recipient, str(ex))
+        notify_admin_of_failure(to, str(ex))
         return False
 
 

@@ -4,117 +4,18 @@ from apscheduler.triggers.interval import IntervalTrigger
 from app.repositories.notifications import NotificationsRepository
 from app.repositories.leads import LeadsRepository
 from app.websockets.manager import ws_manager
-# from app.services.email_service import send_email
 from datetime import datetime, timezone, timedelta
+from app.services.email_service import send_email
 
-import asyncio
+
+
 
 # Scheduler scans every minute, finds leads with next_followup_at within next 5 mins
 # and creates notifications for assigned sales + manager (assigned_by / if null then managers are all? We'll notify assigned_by if present)
 # To prevent duplicates: store in notifications with a deterministic key in message and check an extra collection or embed meta.
 # We'll store in db.scheduled_notifications a doc per lead_id+next_followup_at+user_id.
 
-
-import os
-import aiosmtplib
-
-from dotenv import load_dotenv
-
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-TEMPLATE_DIR = BASE_DIR / "EmailTemplates"
-
-load_dotenv(Path(BASE_DIR / ".env"))
-
-print("BASE_DIR =", BASE_DIR)
-print("ENV PATH =", BASE_DIR / ".env")
-
-print("SMTP_HOST =", os.getenv("SMTP_HOST"))
-print("SMTP_USER =", os.getenv("SMTP_USER"))
-print("SMTP_FROM =", os.getenv("SMTP_FROM"))
-print("SMTP_PASS =", os.getenv("SMTP_PASS"))
-
-
-async def send_email(
-    to: str,
-    subject: str,
-    body: str,
-    lead_name: str = "",
-    followup_time: str = "",
-    lead_link: str = "",
-):
-
-    SMTP_HOST = os.getenv("SMTP_HOST")
-    SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-    SMTP_USER = os.getenv("SMTP_USER")
-    SMTP_PASS = os.getenv("SMTP_PASS")
-    SMTP_FROM = os.getenv("SMTP_FROM")
-
-    if not all([
-        SMTP_HOST,
-        SMTP_PORT,
-        SMTP_USER,
-        SMTP_PASS,
-        SMTP_FROM,
-    ]):
-        print("SMTP environment variables missing")
-        return
-
-    # Read HTML template
-    template_path = TEMPLATE_DIR / "followUpEmail.html"
-
-    with open(template_path, "r", encoding="utf-8") as f:
-        html_template = f.read()
-
-    # Replace placeholders
-    html_body = (
-        html_template
-        .replace("{{lead_name}}", lead_name)
-        .replace("{{followup_time}}", followup_time)
-        .replace("{{lead_link}}", lead_link)
-        .replace("{{message}}", body)
-    )
-
-    msg = MIMEMultipart("alternative")
-
-    msg["From"] = SMTP_FROM
-    msg["To"] = to
-    msg["Subject"] = subject
-
-    # Plain text fallback
-    text_part = MIMEText(body, "plain")
-
-    # HTML email
-    html_part = MIMEText(html_body, "html")
-
-    msg.attach(text_part)
-    msg.attach(html_part)
-
-    try:
-
-        await aiosmtplib.send(
-            msg,
-            hostname=SMTP_HOST,
-            port=SMTP_PORT,
-            username=SMTP_USER,
-            password=SMTP_PASS,
-            start_tls=True,
-            timeout=30,
-        )
-
-        print(f"Email sent to {to}")
-
-    except Exception as e:
-
-        print(
-            f"Failed to send email to {to}: {e}"
-        )
-    
-
+  
 async def scan_and_notify(db):
     print("Scanning for upcoming follow-ups...")
 

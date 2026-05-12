@@ -26,6 +26,7 @@ export default function LeadDetails() {
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const isManager = user?.role === "MANAGER";
+  const isAdmin = user?.role === "ADMIN";
 
   const { data: lead, isLoading } = useQuery({
     queryKey: ["lead", id],
@@ -321,175 +322,180 @@ export default function LeadDetails() {
         </Panel>
 
         <Panel title="Update Fields">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <Field label="Status">
-              <select
-                className="border rounded-lg px-3 py-2 w-full"
-                value={lead.status}
-                onChange={(e) =>
-                  patchMutation.mutate({ status: e.target.value })
-                }
-              >
-                <option value="OPEN">OPEN</option>
-                <option value="WIP">WIP</option>
-                <option value="CLOSED">CLOSED</option>
-                <option value="LOST">LOST</option>
-              </select>
-            </Field>
-            <Field label="Temperature">
-              <select
-                className="border rounded-lg px-3 py-2 w-full"
-                value={lead.temperature}
-                onChange={(e) =>
-                  patchMutation.mutate({ temperature: e.target.value })
-                }
-              >
-                <option value="COLD">COLD</option>
-                <option value="WARM">WARM</option>
-                <option value="HOT">HOT</option>
-              </select>
-            </Field>
-            <Field label="Stage">
-              <select
-                className="border rounded-lg px-3 py-2 w-full"
-                value={lead.pipeline_stage || ""}
-                onChange={(e) =>
-                  patchMutation.mutate({
-                    pipeline_stage: e.target.value || null,
-                  })
-                }
-              >
-                <option value="">—</option>
-                <option value="NEW">NEW</option>
-                <option value="CONTACTED">CONTACTED</option>
-                <option value="DEMO">DEMO</option>
-                <option value="PROPOSAL">PROPOSAL</option>
-                <option value="NEGOTIATION">NEGOTIATION</option>
-                <option value="WON">WON</option>
-                <option value="LOST">LOST</option>
-              </select>
-            </Field>
-            <Field label="Next Followup" >
-              <DateTimePickerField
-                value={
-                  lead.next_followup_at
-                    ? new Date(
-                        lead.next_followup_at.endsWith("Z")
-                          ? lead.next_followup_at
-                          : lead.next_followup_at + "Z",
-                      )
-                        .toISOString()
-                        .slice(0, 16)
-                    : ""
-                }
-                onSave={(date) =>
-                  patchMutation.mutate({
-                    next_followup_at: date
-                      ? new Date(date).toISOString()
-                      : null,
-                  })
-                }
-              />
-            </Field>
-            {isManager && (
-              <div className="col-span-2">
-                <Field label="Assign to">
-                  <select
-                    className="border rounded-lg px-3 py-2 w-full"
-                    value={lead.assigned_to || ""}
-                    onChange={(e) =>
-                      assignMutation.mutate({
-                        assigned_to: e.target.value || null,
-                      })
-                    }
-                  >
-                    <option value="">UNASSIGNED</option>
-                    {(salesUsers || []).map((u) => (
-                      <option key={u.user_id} value={u.user_id}>
-                        {u.username}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                {lead.assigned_to && (
-                  <div className="mt-2">
-                    <button
-                      onClick={() =>
-                        assignMutation.mutate({ assigned_to: null })
-                      }
-                      className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
-                    >
-                      Unassign
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          {!isManager && (
-            <div className="text-xs text-slate-500 mt-3">
-              Sales cannot change assignment fields.
-            </div>
-          )}
-        </Panel>
+  <div className="grid grid-cols-2 gap-3 text-sm">
+    <Field label="Status">
+      <select
+        disabled={isAdmin}
+        className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
+        value={lead.status}
+        onChange={(e) =>
+          patchMutation.mutate({ status: e.target.value })
+        }
+      >
+        <option value="OPEN">OPEN</option>
+        <option value="WIP">WIP</option>
+        <option value="CLOSED">CLOSED</option>
+        <option value="LOST">LOST</option>
+      </select>
+    </Field>
 
-        <Panel title="Purpose / Notes">
-          <div className="text-sm text-slate-700 whitespace-pre-wrap">
-            {lead.purpose || "—"}
-          </div>
-          <Notes
-            lead={lead}
-            onAdd={async (text) => {
-              try {
-                await LeadsAPI.addNote(id, { text });
-                toast.success("Note added");
-                qc.invalidateQueries({ queryKey: ["lead", id] });
-              } catch {
-                toast.error("Add note failed");
+    <Field label="Temperature">
+      <select
+        disabled={isAdmin}
+        className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
+        value={lead.temperature}
+        onChange={(e) =>
+          patchMutation.mutate({ temperature: e.target.value })
+        }
+      >
+        <option value="COLD">COLD</option>
+        <option value="WARM">WARM</option>
+        <option value="HOT">HOT</option>
+      </select>
+    </Field>
+
+    <Field label="Stage">
+      <select
+        disabled={isAdmin}
+        className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
+        value={lead.pipeline_stage || ""}
+        onChange={(e) =>
+          patchMutation.mutate({
+            pipeline_stage: e.target.value || null,
+          })
+        }
+      >
+        <option value="">—</option>
+        <option value="NEW">NEW</option>
+        <option value="CONTACTED">CONTACTED</option>
+        <option value="DEMO">DEMO</option>
+        <option value="PROPOSAL">PROPOSAL</option>
+        <option value="NEGOTIATION">NEGOTIATION</option>
+        <option value="WON">WON</option>
+        <option value="LOST">LOST</option>
+      </select>
+    </Field>
+
+    <Field label="Next Followup">
+      <DateTimePickerField
+        disabled={isAdmin}
+        value={
+          lead.next_followup_at
+            ? new Date(
+                lead.next_followup_at.endsWith("Z")
+                  ? lead.next_followup_at
+                  : lead.next_followup_at + "Z",
+              )
+                .toISOString()
+                .slice(0, 16)
+            : ""
+        }
+        onSave={(date) =>
+          !isAdmin &&
+          patchMutation.mutate({
+            next_followup_at: date
+              ? new Date(date).toISOString()
+              : null,
+          })
+        }
+      />
+    </Field>
+
+    {isManager && (
+      <div className="col-span-2">
+        <Field label="Assign to">
+          <select
+            className="border rounded-lg px-3 py-2 w-full"
+            value={lead.assigned_to || ""}
+            onChange={(e) =>
+              assignMutation.mutate({
+                assigned_to: e.target.value || null,
+              })
+            }
+          >
+            <option value="">UNASSIGNED</option>
+            {(salesUsers || []).map((u) => (
+              <option key={u.user_id} value={u.user_id}>
+                {u.username}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        {lead.assigned_to && (
+          <div className="mt-2">
+            <button
+              onClick={() =>
+                assignMutation.mutate({ assigned_to: null })
               }
-            }}
-            nameOf={nameOf}
-          />
-        </Panel>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Panel title="Next Actions & Probability">
-          <NextActions
-            lead={lead}
-            onChange={(next) => patchMutation.mutate({ next_actions: next })}
-            onProb={(p) => patchMutation.mutate({ win_probability: p })}
-          />
-        </Panel>
-        <Panel title="Followup Activity">
-          <div className="h-56 rounded-2xl overflow-hidden">
-            <ResponsiveContainer>
-              <AreaChart data={fuSeries} margin={{ left: 10, right: 10 }}>
-                <defs>
-                  <linearGradient id="gFu" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.35} />
-                    <stop
-                      offset="100%"
-                      stopColor="#0ea5e9"
-                      stopOpacity={0.02}
-                    />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="date" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#0ea5e9"
-                  strokeWidth={2}
-                  fill="url(#gFu)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+              className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
+            >
+              Unassign
+            </button>
           </div>
-        </Panel>
+        )}
+      </div>
+    )}
+  </div>
+
+  {!isManager && !isAdmin && (
+    <div className="text-xs text-slate-500 mt-3">
+      Sales cannot change assignment fields.
+    </div>
+  )}
+
+  {isAdmin && (
+    <div className="text-xs text-slate-500 mt-2">
+      Admin cannot update leads.
+    </div>
+  )}
+</Panel>
+
+<Panel title="Purpose / Notes">
+  <div className="text-sm text-slate-700 whitespace-pre-wrap">
+    {lead.purpose || "—"}
+  </div>
+
+  {!isAdmin ? (
+    <Notes
+      lead={lead}
+      onAdd={async (text) => {
+        try {
+          await LeadsAPI.addNote(id, { text });
+          toast.success("Note added");
+          qc.invalidateQueries({ queryKey: ["lead", id] });
+        } catch {
+          toast.error("Add note failed");
+        }
+      }}
+      nameOf={nameOf}
+    />
+  ) : (
+    <div className="text-xs text-slate-500 mt-3">
+      Admin cannot update leads.
+    </div>
+  )}
+</Panel>
+</div>
+
+<div className="grid lg:grid-cols-2 gap-4">
+  <Panel title="Next Actions & Probability">
+    {!isAdmin ? (
+      <NextActions
+        lead={lead}
+        onChange={(next) =>
+          patchMutation.mutate({ next_actions: next })
+        }
+        onProb={(p) =>
+          patchMutation.mutate({ win_probability: p })
+        }
+      />
+    ) : (
+      <div className="text-xs text-slate-500">
+        Admin cannot update leads.
+      </div>
+    )}
+  </Panel>
         <Panel title={`Followups (${(followups || []).length})`}>
           <div className="space-y-3">
             {(followups || []).map((f) => (

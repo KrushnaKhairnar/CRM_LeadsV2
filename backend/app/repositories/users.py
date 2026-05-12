@@ -17,7 +17,6 @@ class UsersRepository:
             "username": username,
             "password_hash": hash_password(password),
             "email": email,
-            "email": email,
             "role": role,
             "is_active": True,
             "created_by": created_by,
