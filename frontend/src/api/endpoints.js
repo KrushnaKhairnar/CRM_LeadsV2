@@ -73,6 +73,8 @@ export const LeadsAPI = {
   addFollowup: (id, payload) =>
     api.post(`/leads/${id}/followups`, payload).then((r) => r.data),
   audit: (id) => api.get(`/leads/${id}/audit`).then((r) => r.data),
+  exportSampleCsv: () => api.get("/leads/sampleImport.csv").then((r) => r.data),
+  
   exportCsvUrl: (params) => {
     const qs = new URLSearchParams(params || {}).toString();
     return api.defaults.baseURL + `/leads/export.csv${qs ? "?" + qs : ""}`;

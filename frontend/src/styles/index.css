@@ -27,6 +27,11 @@ body {
     /* slate-200 */
   }
 
+.custom-datetime::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
   input[type="text"],
   input[type="password"],
   input[type="number"],

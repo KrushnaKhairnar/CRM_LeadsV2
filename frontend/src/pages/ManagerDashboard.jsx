@@ -54,7 +54,7 @@ export default function ManagerDashboard() {
       LeadsAPI.list({
         page: 1,
         page_size: 10,
-        sort_by: "updated_at",
+        sort_by: "created_at",
         created_by: me.user_id,
       }),
   });
@@ -152,17 +152,9 @@ export default function ManagerDashboard() {
           <div className="h-64">
             <ResponsiveContainer>
               <PieChart>
-                <Pie
-                  data={statusData}
-                  dataKey="value"
-                  outerRadius={90}
-                  label
-                >
+                <Pie data={statusData} dataKey="value" outerRadius={90} label>
                   {statusData.map((_, idx) => (
-                    <Cell
-                      key={idx}
-                      fill={pieColors[idx % pieColors.length]}
-                    />
+                    <Cell key={idx} fill={pieColors[idx % pieColors.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -181,11 +173,7 @@ export default function ManagerDashboard() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Area
-                  dataKey="value"
-                  stroke="#14b8a6"
-                  fill="#14b8a620"
-                />
+                <Area dataKey="value" stroke="#14b8a6" fill="#14b8a620" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -216,11 +204,7 @@ export default function ManagerDashboard() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Area
-                dataKey="total"
-                stroke="#10b981"
-                fill="#10b98120"
-              />
+              <Area dataKey="total" stroke="#10b981" fill="#10b98120" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -248,7 +232,16 @@ export default function ManagerDashboard() {
                   <td>{l.status}</td>
                   <td>
                     {l.next_followup_at
-                      ? new Date(l.next_followup_at).toLocaleString("en-GB")
+                      ? new Date(l.next_followup_at)
+                          .toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                          .replace(",", "")
                       : "-"}
                   </td>
                   <td className="text-right">

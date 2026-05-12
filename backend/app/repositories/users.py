@@ -1,4 +1,6 @@
 from typing import Optional, List
+
+from pydantic import EmailStr
 from app.core.security import hash_password
 from app.models.common import now_utc
 from uuid import uuid4
@@ -7,14 +9,14 @@ class UsersRepository:
     def __init__(self, db):
         self.db = db
 
-    async def create(self, username: str, password: str, role: str, created_by: Optional[str] = None) -> str:
+    async def create(self, username: str, email: Optional[EmailStr], password: str, role: str, created_by: Optional[str] = None) -> str:
         uid = str(uuid4())
         doc = {
             "_id": uid,
             "user_id": uid,
             "username": username,
             "password_hash": hash_password(password),
-            "email": "xyz@didikore.com",
+            "email": email,
             "role": role,
             "is_active": True,
             "created_by": created_by,

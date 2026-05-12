@@ -9,6 +9,7 @@ import { UserPlus } from 'lucide-react'
 
 const schema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(4, 'Password must be at least 4 characters'),
   confirmPassword: z.string().min(4),
 }).refine(data => data.password === data.confirmPassword, {
@@ -26,17 +27,18 @@ export default function RegisterUserModal({ open, onClose, role, onCreated }) {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { username: '', password: '', confirmPassword: '' },
+    defaultValues: { username: '', email: '', password: '', confirmPassword: '' },
   })
 
   useEffect(() => {
-    if (open) reset({ username: '', password: '', confirmPassword: '' })
+    if (open) reset({ username: '', email: '', password: '', confirmPassword: '' })
   }, [open, reset])
 
   const onSubmit = async (values) => {
     try {
       await AuthAPI.register({
         username: values.username,
+        email: values.email,
         password: values.password,
         role,
       })
@@ -95,6 +97,16 @@ export default function RegisterUserModal({ open, onClose, role, onCreated }) {
                     {...register('username')}
                   />
                   {errors.username && <div className="text-xs text-rose-600 mt-1">{errors.username.message}</div>}
+                </div>
+                  <div>
+                  <label className="text-sm font-medium text-slate-700">Email</label>
+                  <input
+                    type="email"
+                    className="mt-1 w-full"
+                    placeholder="e.g. john@example.com"
+                    {...register('email')}
+                  />
+                  {errors.email && <div className="text-xs text-rose-600 mt-1">{errors.email.message}</div>}
                 </div>
 
                 <div>

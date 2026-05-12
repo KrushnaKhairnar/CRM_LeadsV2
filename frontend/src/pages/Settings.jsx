@@ -38,7 +38,7 @@ export default function Settings() {
 function ManagerAwards() {
   const user = useAuthStore(s => s.user)
   const isManager = user?.role === 'MANAGER'
-  const { data: sales } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales(), enabled: isManager })
+  const { data: sales } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.myTeam(), enabled: isManager })
   const [payload, setPayload] = React.useState({ user_id: '', badge_key: 'closer_5', title: '', description: '' })
   if (!isManager) return null
   const submit = async () => {

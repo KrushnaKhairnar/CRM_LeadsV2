@@ -15,6 +15,7 @@ class UserCreate(BaseModel):
 class UserPublic(BaseModel):
     user_id: str
     username: str
+    email: Optional[EmailStr] = None
     role: Role
     is_active: bool = True
     created_by: Optional[str] = None
@@ -31,6 +32,7 @@ class TokenResponse(BaseModel):
 class MeResponse(BaseModel):
     user_id: str
     username: str
+    email: Optional[EmailStr] = None
     role: Role
     created_by: Optional[str] = None
     full_name: Optional[str] = None
@@ -39,7 +41,7 @@ class MeResponse(BaseModel):
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
 
 class UserUpdateByManager(BaseModel):

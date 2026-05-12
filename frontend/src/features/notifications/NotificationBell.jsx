@@ -22,9 +22,9 @@ export default function NotificationBell() {
   const items = useMemo(() => {
     const server = data?.items || []
     const merged = [...incoming, ...server]
-    // unique by _id
+    // unique by notification_id
     const seen = new Set()
-    return merged.filter(n => (seen.has(n._id) ? false : (seen.add(n._id), true))).slice(0, 12)
+    return merged.filter(n => (seen.has(n.notification_id) ? false : (seen.add(n.notification_id), true))).slice(0, 12)
   }, [data, incoming])
 
   const unread = useMemo(() => items.reduce((a,n)=>a + (n.read ? 0 : 1), 0), [items])
@@ -32,7 +32,7 @@ export default function NotificationBell() {
   React.useEffect(() => { setUnread(unread) }, [unread, setUnread])
 
   const onClickItem = async (n) => {
-    try { await NotificationsAPI.read(n._id) } catch {}
+    try { await NotificationsAPI.read(n.notification_id) } catch {}
     qc.invalidateQueries({ queryKey: ['notifications'] })
     nav(n.link || '/leads')
   }
@@ -58,7 +58,7 @@ export default function NotificationBell() {
           <div className="max-h-96 overflow-auto">
             {items.length === 0 && <div className="p-4 text-sm text-slate-500">No notifications</div>}
             {items.map(n => (
-              <Menu.Item key={n._id}>
+              <Menu.Item key={n.notification_id}>
                 {({ active }) => (
                   <button onClick={() => onClickItem(n)}
                     className={clsx("w-full text-left px-4 py-3 border-b last:border-b-0", active && "bg-slate-50")}>

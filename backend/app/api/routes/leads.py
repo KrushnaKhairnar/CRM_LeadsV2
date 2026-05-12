@@ -74,7 +74,7 @@ async def list_leads(
     user=Depends(get_current_user),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=5, le=100),
-    sort_by: str = Query("updated_at"),
+    sort_by: str = Query("created_at"),
     sort_dir: int = Query(-1),
     status: Optional[str] = None,
     temperature: Optional[str] = None,
@@ -133,6 +133,33 @@ async def list_leads(
     }
 
 
+
+@router.get("/sampleImport.csv")
+async def export_csv(
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    status: Optional[str] = None,
+    temperature: Optional[str] = None,
+    pipeline_stage: Optional[str] = None,
+    assigned_to: Optional[str] = None,
+    q: Optional[str] = None,
+):
+    # manager only
+    ensure_manager(user)
+    svc = LeadsService(db)
+    filters = _filters(status, temperature, pipeline_stage, assigned_to, q)
+    items, _ = await svc.list_for_user(user, filters, page=1, page_size=5000, sort=("created_at", -1))
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["name","phone","email","company","source","status","temperature","pipeline_stage"])
+    for l in items:
+        writer.writerow([
+            l.get("name",""), l.get("phone",""), l.get("email",""), l.get("company",""),
+            l.get("source",""), l.get("status",""), l.get("temperature",""), l.get("pipeline_stage",""),
+        ])
+    return Response(content=output.getvalue(), media_type="text/csv")
+
 @router.get("/export.csv")
 async def export_csv(
     db=Depends(get_db),
@@ -147,7 +174,7 @@ async def export_csv(
     ensure_manager(user)
     svc = LeadsService(db)
     filters = _filters(status, temperature, pipeline_stage, assigned_to, q)
-    items, _ = await svc.list_for_user(user, filters, page=1, page_size=5000, sort=("updated_at",-1))
+    items, _ = await svc.list_for_user(user, filters, page=1, page_size=5000, sort=("created_at", -1))
 
     output = io.StringIO()
     writer = csv.writer(output)

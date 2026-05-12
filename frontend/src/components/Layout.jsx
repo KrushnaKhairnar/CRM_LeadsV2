@@ -128,11 +128,11 @@ export default function Layout({ children }) {
               </NavLink>
             )}
 
-            {!isAdmin && (
+            {/* {!isAdmin && (
               <NavLink to="/views" className={linkClass}>
                 <Bookmark size={16} /> Saved Views
               </NavLink>
-            )}
+            )} */}
 
             {!isAdmin && (
               <NavLink to="/invoices" className={linkClass}>

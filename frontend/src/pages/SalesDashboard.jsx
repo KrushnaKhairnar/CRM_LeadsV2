@@ -1,48 +1,79 @@
-import React, { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { LeadsAPI, AnalyticsAPI } from '../api/endpoints'
-import { Link } from 'react-router-dom'
-import Badge from '../components/Badge'
-import CreateLeadModal from './components/CreateLeadModal'
+import React, { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { LeadsAPI, AnalyticsAPI } from "../api/endpoints";
+import { Link } from "react-router-dom";
+import Badge from "../components/Badge";
+import CreateLeadModal from "./components/CreateLeadModal";
 
 export default function SalesDashboard() {
-  const { data } = useQuery({ queryKey: ['leads-sales', { page: 1 }], queryFn: () => LeadsAPI.list({ page: 1, page_size: 10 }) })
-  const { data: ana } = useQuery({ queryKey: ['analytics-sales'], queryFn: () => AnalyticsAPI.salesMe({ days: 30 }) })
-  const [openCreate, setOpenCreate] = useState(false)
+  const { data } = useQuery({
+    queryKey: ["leads-sales", { page: 1 }],
+    queryFn: () => LeadsAPI.list({ page: 1, page_size: 10 }),
+  });
+  const { data: ana } = useQuery({
+    queryKey: ["analytics-sales"],
+    queryFn: () => AnalyticsAPI.salesMe({ days: 30 }),
+  });
+  const [openCreate, setOpenCreate] = useState(false);
 
-  const overdue = useMemo(() => (data?.items || []).filter(l => l.is_overdue), [data])
+  const overdue = useMemo(
+    () => (data?.items || []).filter((l) => l.is_overdue),
+    [data],
+  );
   const dueToday = useMemo(() => {
-    const now = new Date()
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
-    return (data?.items || []).filter(l => l.next_followup_at && new Date(l.next_followup_at) >= start && new Date(l.next_followup_at) < end)
-  }, [data])
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    return (data?.items || []).filter(
+      (l) =>
+        l.next_followup_at &&
+        new Date(l.next_followup_at) >= start &&
+        new Date(l.next_followup_at) < end,
+    );
+  }, [data]);
 
   return (
     <div className="space-y-6 animate-in-up">
       <div>
-        <div className="text-2xl font-semibold tracking-tight">Sales Dashboard</div>
-        <div className="text-sm text-slate-500">Your assigned/created leads and followups</div>
+        <div className="text-2xl font-semibold tracking-tight">
+          Sales Dashboard
+        </div>
+        <div className="text-sm text-slate-500">
+          Your assigned/created leads and followups
+        </div>
         <div className="mt-3">
-          <button onClick={() => setOpenCreate(true)} className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm shadow-soft hover:shadow-hover">+ Quick Add Lead</button>
+          <button
+            onClick={() => setOpenCreate(true)}
+            className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm shadow-soft hover:shadow-hover"
+          >
+            + Quick Add Lead
+          </button>
         </div>
       </div>
 
       <div className="grid md:grid-cols-4 gap-4">
-        <Card title="My Leads (30d)" value={ana?.total ?? '-'} />
-        <Card title="Won" value={ana?.won ?? '-'} />
-        <Card title="Lost" value={ana?.lost ?? '-'} />
-        <Card title="Overdue" value={ana?.overdue ?? '-'} />
+        <Card title="My Leads (30d)" value={ana?.total ?? "-"} />
+        <Card title="Won" value={ana?.won ?? "-"} />
+        <Card title="Lost" value={ana?.lost ?? "-"} />
+        <Card title="Overdue" value={ana?.overdue ?? "-"} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Panel title={`Followups Due Today (${dueToday.length})`}>
           <div className="space-y-2">
-            {dueToday.length === 0 && <div className="text-sm text-slate-500">Nothing due today.</div>}
-            {dueToday.map(l => (
-              <Link key={l._id} to={`/leads/${l.lead_id}`} className="block border rounded-xl p-3 hover:bg-slate-50 transition">
+            {dueToday.length === 0 && (
+              <div className="text-sm text-slate-500">Nothing due today.</div>
+            )}
+            {dueToday.map((l) => (
+              <Link
+                key={l._id}
+                to={`/leads/${l.lead_id}`}
+                className="block border rounded-xl p-3 hover:bg-slate-50 transition"
+              >
                 <div className="font-medium">{l.name}</div>
-                <div className="text-xs text-slate-500">{new Date(l.next_followup_at).toLocaleString('en-GB')}</div>
+                <div className="text-xs text-slate-500">
+                  {new Date(l.next_followup_at).toLocaleString("en-GB")}
+                </div>
               </Link>
             ))}
           </div>
@@ -50,11 +81,22 @@ export default function SalesDashboard() {
 
         <Panel title={`Overdue Followups (${overdue.length})`}>
           <div className="space-y-2">
-            {overdue.length === 0 && <div className="text-sm text-slate-500">No overdue followups.</div>}
-            {overdue.map(l => (
-              <Link key={l._id} to={`/leads/${l.lead_id}`} className="block border border-rose-200 rounded-xl p-3 hover:bg-rose-50 transition">
+            {overdue.length === 0 && (
+              <div className="text-sm text-slate-500">
+                No overdue followups.
+              </div>
+            )}
+            {overdue.map((l) => (
+              <Link
+                key={l._id}
+                to={`/leads/${l.lead_id}`}
+                className="block border border-rose-200 rounded-xl p-3 hover:bg-rose-50 transition"
+              >
                 <div className="font-medium">{l.name}</div>
-                <div className="text-xs text-rose-700">Overdue since {new Date(l.next_followup_at).toLocaleString('en-GB')}</div>
+                <div className="text-xs text-rose-700">
+                  Overdue since{" "}
+                  {new Date(l.next_followup_at).toLocaleString("en-GB")}
+                </div>
               </Link>
             ))}
           </div>
@@ -75,23 +117,57 @@ export default function SalesDashboard() {
               </tr>
             </thead>
             <tbody>
-              {(data?.items || []).map(l => (
+              {(data?.items || []).map((l) => (
                 <tr key={l._id} className="border-t">
                   <td className="py-2">{l.name}</td>
-                  <td><Badge value={l.status} /></td>
-                  <td><Badge value={l.temperature} /></td>
-                  <td>{l.pipeline_stage ? <Badge value={l.pipeline_stage} /> : <span className="text-slate-400">—</span>}</td>
-                  <td>{l.next_followup_at ? new Date(l.next_followup_at).toLocaleString('en-GB') : '-'}</td>
-                  <td className="text-right"><Link className="text-brand-700 underline decoration-brand-400 underline-offset-4" to={`/leads/${l.lead_id}`}>View more</Link></td>
+                  <td>
+                    <Badge value={l.status} />
+                  </td>
+                  <td>
+                    <Badge value={l.temperature} />
+                  </td>
+                  <td>
+                    {l.pipeline_stage ? (
+                      <Badge value={l.pipeline_stage} />
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td>
+                    {l.next_followup_at
+                      ? new Date(l.next_followup_at)
+                          .toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                          .replace(",", "")
+                      : "-"}
+                  </td>
+                  <td className="text-right">
+                    <Link
+                      className="text-brand-700 underline decoration-brand-400 underline-offset-4"
+                      to={`/leads/${l.lead_id}`}
+                    >
+                      View more
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </Panel>
-      <CreateLeadModal open={openCreate} onClose={() => setOpenCreate(false)} onCreated={() => setOpenCreate(false)} />
+      <CreateLeadModal
+        open={openCreate}
+        onClose={() => setOpenCreate(false)}
+        onCreated={() => setOpenCreate(false)}
+      />
     </div>
-  )
+  );
 }
 
 function Card({ title, value }) {
@@ -100,7 +176,7 @@ function Card({ title, value }) {
       <div className="text-xs text-slate-500">{title}</div>
       <div className="text-2xl font-semibold mt-1">{value}</div>
     </div>
-  )
+  );
 }
 
 function Panel({ title, children }) {
@@ -109,5 +185,5 @@ function Panel({ title, children }) {
       <div className="font-medium">{title}</div>
       <div className="mt-3">{children}</div>
     </div>
-  )
+  );
 }

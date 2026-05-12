@@ -1,4 +1,4 @@
-import React, { useMemo, useState, Fragment, useEffect } from "react";
+import React, { useMemo, useState, Fragment, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LeadsAPI, UsersAPI } from "../api/endpoints";
@@ -162,71 +162,35 @@ export default function LeadDetails() {
     deleteProductMutation.mutate(productId);
   };
 
-  function formatDateTimeForBackend(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    const hour = String(date.getHours()).padStart(2, "0");
-    const minute = String(date.getMinutes()).padStart(2, "0");
-    const second = "00";
-
-    return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-  }
-
-  const formatDateTime12h = (value) => {
-    if (!value) return "-";
-
-    const d = new Date(value);
-
-    if (isNaN(d)) return "-";
-
-    return d.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   function DateTimePickerField({ value, onSave }) {
-    const [selectedDate, setSelectedDate] = useState(
-      value ? new Date(value) : null,
-    );
+  const [selectedDate, setSelectedDate] = useState(
+    value || ""
+  );
 
-    return (
-      <div className="relative w-full">
-        {/* Calendar Icon */}
-        <CalendarDays
-          size={18}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 z-10 pointer-events-none"
-        />
-
-        <DatePicker
-          selected={selectedDate}
-          onChange={(date) => setSelectedDate(date)}
-          onBlur={() => onSave(selectedDate)}
-          showTimeSelect
-          timeFormat="HH:mm"
-          timeIntervals={15}
-          dateFormat="dd/MM/yyyy HH:mm"
-          placeholderText="Select followup date"
-          className="border rounded-lg px-3 py-2 pr-10 w-full"
-          /* Open calendar above input */
-          popperPlacement="top-start"
-          /* Keep above all content */
-          popperClassName="z-[9999]"
-          portalId="root"
-        />
-      </div>
-    );
-  }
+  return (
+    <div className="relative w-full">
+  
+      <input
+        type="datetime-local"
+        className="w-full border rounded-lg px-3 py-2 pr-10"
+        value={selectedDate}
+        onChange={(e) =>
+          setSelectedDate(e.target.value)
+        }
+        onBlur={() => onSave(selectedDate)}
+      />
+    </div>
+  );
+}
 
   const fuSeries = useMemo(() => {
     const arr = (followups || []).map((f) => ({
       date: new Date(f.done_at).toLocaleDateString("en-GB"),
+      time: new Date(f.done_at).toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
       count: 1,
     }));
     const by = {};
@@ -290,7 +254,18 @@ export default function LeadDetails() {
             <Row label="Next Followup">
               <span>
                 {lead.next_followup_at
-                  ? new Date(lead.next_followup_at).toLocaleString("en-GB")
+                  ? new Date(
+                      lead.next_followup_at.endsWith("Z")
+                        ? lead.next_followup_at
+                        : lead.next_followup_at + "Z",
+                    ).toLocaleString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })
                   : "-"}
               </span>
             </Row>
@@ -394,13 +369,23 @@ export default function LeadDetails() {
                 <option value="LOST">LOST</option>
               </select>
             </Field>
-            <Field label="Next Followup">
+            <Field label="Next Followup" >
               <DateTimePickerField
-                value={lead.next_followup_at}
+                value={
+                  lead.next_followup_at
+                    ? new Date(
+                        lead.next_followup_at.endsWith("Z")
+                          ? lead.next_followup_at
+                          : lead.next_followup_at + "Z",
+                      )
+                        .toISOString()
+                        .slice(0, 16)
+                    : ""
+                }
                 onSave={(date) =>
                   patchMutation.mutate({
                     next_followup_at: date
-                      ? formatDateTimeForBackend(date)
+                      ? new Date(date).toISOString()
                       : null,
                   })
                 }
@@ -533,7 +518,7 @@ export default function LeadDetails() {
                 {f.next_followup_at && (
                   <div className="text-xs text-slate-500 mt-2">
                     Next:{" "}
-                    {new Date(f.next_followup_at)
+                    {new Date(f.next_followup_at + "Z")
                       .toLocaleString("en-GB", {
                         day: "2-digit",
                         month: "2-digit",
@@ -581,9 +566,10 @@ export default function LeadDetails() {
 
                   <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
                     {new Date().toLocaleDateString("en-GB")}{" "}
-                    {new Date().toLocaleTimeString([], {
+                    {new Date().toLocaleTimeString("en-GB", {
                       hour: "2-digit",
                       minute: "2-digit",
+                      hour12: true,
                     })}
                   </div>
                 </div>
@@ -786,12 +772,43 @@ function AuditDiff({ before, after }) {
     .map((k) => {
       const b = before?.[k];
       const a = after?.[k];
+
       if (JSON.stringify(b) === JSON.stringify(a)) return null;
+
       return { k, b, a };
     })
     .filter(Boolean);
 
   if (rows.length === 0) return null;
+
+  const formatValue = (key, value) => {
+    if (!value) return "-";
+
+    const dateFields = [
+      "done_at",
+      "next_followup_at",
+      "created_at",
+      "updated_at",
+    ];
+
+    if (dateFields.includes(key)) {
+      const dateValue =
+        typeof value === "string" && !value.endsWith("Z") ? value + "Z" : value;
+
+      return new Date(dateValue)
+        .toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+        .replace(",", "");
+    }
+
+    return value;
+  };
 
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 divide-y divide-slate-200">
@@ -811,8 +828,7 @@ function AuditDiff({ before, after }) {
               <ProductStatusDiff before={r.b} after={r.a} />
             ) : (
               <>
-                {/* <DiffBox label="From" value={r.b} type="before" /> */}
-                <DiffBox label=" " value={r.a} type="after" />
+                <DiffBox label=" " value={formatValue(r.k, r.a)} type="after" />
               </>
             )}
           </div>
@@ -1006,34 +1022,6 @@ function TagAdder({ onAdd }) {
   );
 }
 
-const formatLocalDateTime = (value) => {
-  if (!value) return "-";
-
-  const [date, time] = value.split("T");
-  if (!date || !time) return value;
-
-  const [year, month, day] = date.split("-");
-  const [hour, minute] = time.split(":");
-
-  return `${day}-${month}-${year} ${hour}:${minute}`;
-};
-
-const formatDateTime12h = (value) => {
-  if (!value) return "-";
-
-  const d = new Date(value);
-  if (isNaN(d)) return "-";
-
-  return d.toLocaleString("en-US", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
-
 function FollowupModal({
   open,
   onClose,
@@ -1053,7 +1041,7 @@ function FollowupModal({
     setSelectedProductId(productId || "");
   }, [productId]);
 
-  const toLocalISOString = (value) => {
+  const toLocaleTimeString = (value) => {
     if (!value) return null;
     return value.length === 16 ? value + ":00" : value;
   };
@@ -1061,11 +1049,17 @@ function FollowupModal({
   const submit = () => {
     if (!note.trim()) return toast.error("Note is required");
 
+    console.log("ISO DATE:", nextAt ? new Date(nextAt).toISOString() : null);
+
     const payload = {
-      done_at: toLocalISOString(doneAt), // ✅ keeps selected time
+      done_at: toLocaleTimeString(doneAt), // ✅ keeps selected time
       note,
       outcome,
-      next_followup_at: nextAt ? toLocalISOString(nextAt) : null,
+      point_of_contact_name: null,
+      point_of_contact_phone: null,
+      point_of_contact_email: null,
+      // next_followup_at: nextAt ? toLocaleTimeString(nextAt) : null,
+      next_followup_at: nextAt ? new Date(nextAt).toISOString() : null,
     };
 
     if (selectedProductId) {
@@ -1121,16 +1115,18 @@ function FollowupModal({
                 <div>
                   <div className="text-xs text-slate-500 flex justify-between">
                     <span>Done At</span>
+
                     {doneAt && (
                       <span className="text-[11px] text-slate-400">
                         {new Date(doneAt).toLocaleTimeString("en-GB", {
                           hour: "2-digit",
                           minute: "2-digit",
-                          hour12: false,
+                          hour12: true,
                         })}
                       </span>
                     )}
                   </div>
+
                   <input
                     type="datetime-local"
                     className="mt-1 w-full"

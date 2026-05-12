@@ -22,7 +22,7 @@ export default function LeadsList() {
   const [pipeline_stage, setStage] = useState("");
   const [assigned_to, setAssignedTo] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
-  const [sortBy, setSortBy] = useState("updated_at");
+  const [sortBy, setSortBy] = useState("created_at");
   const [sortDir, setSortDir] = useState(-1);
   const [selected, setSelected] = useState(new Set());
   const [openBulkAssign, setOpenBulkAssign] = useState(false);
@@ -81,10 +81,52 @@ export default function LeadsList() {
     Math.ceil((data?.total || 0) / (data?.page_size || 20)),
   );
 
-  // const exportCsv = () => {
-  //   const url = LeadsAPI.exportCsvUrl(params)
-  //   window.open(url, '_blank')
-  // }
+  const exportSampleCsv = () => {
+    const headers = [
+      "name",
+      "phone",
+      "email",
+      "company",
+      "source",
+      "status",
+      "temperature",
+      "pipeline_stage",
+    ];
+
+    const sampleRows = [
+      [
+        "John Doe",
+        "+919876543210",
+        "john@example.com",
+        "ABC Pvt Ltd",
+        "Walkin",
+        "Open",
+        "COLD",
+        "Contacted",
+      ],
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...sampleRows.map((row) => row.join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "sample_leads.csv";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+  };
 
   const exportCsv = async () => {
     try {
@@ -139,6 +181,14 @@ export default function LeadsList() {
           {isManager && (
             <>
               <button
+                onClick={() => exportSampleCsv()}
+                title="Download sample CSV format for lead import"
+                className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700 hover:bg-slate-00"
+              >
+                Download Sample Csv
+              </button>
+              
+              <button
                 onClick={() => setOpenCsvImport(true)}
                 className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700"
               >
@@ -158,12 +208,12 @@ export default function LeadsList() {
           >
             + New Lead
           </button>
-          <button
+          {/* <button
             onClick={() => setOpenSaveView(true)}
-            className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
+            className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700"
           >
             Save View
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -409,7 +459,16 @@ export default function LeadsList() {
                   </td>
                   <td className="px-4">
                     {l.next_followup_at
-                      ? new Date(l.next_followup_at).toLocaleString("en-GB")
+                      ? new Date(l.next_followup_at)
+                          .toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                          .replace(",", "")
                       : "-"}
                   </td>
                   <td className="px-4">
@@ -545,7 +604,7 @@ export default function LeadsList() {
           }
         }}
       />
-      <SaveViewModal
+      {/* <SaveViewModal
         open={openSaveView}
         onClose={() => setOpenSaveView(false)}
         onConfirm={async (name) => {
@@ -564,7 +623,7 @@ export default function LeadsList() {
             toast.error("Save view failed");
           }
         }}
-      />
+      /> */}
 
       {/* <BulkCsvImportModal
         open={openCsvImport}
@@ -880,46 +939,6 @@ function BulkStageModal({ open, onClose, onConfirm }) {
   );
 }
 
-// function BulkCsvImportModal({ open, onClose, onConfirm }) {
-//   const [file, setFile] = useState(null);
-
-//   const handleFileChange = (e) => {
-//     if (e.target.files) {
-//       setFile(e.target.files[0]);
-//     }
-//   };
-
-//   const confirm = () => {
-//     if (file) {
-//       onConfirm(file);
-//     }
-//   };
-
-//   return (
-//     <Transition appear show={open} as={Fragment}>
-//       <Dialog as="div" open={open} onClose={onClose} className="relative z-50">
-//         <Transition.Child as={Fragment} enter="transition ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="transition ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
-//           <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-//         </Transition.Child>
-//         <div className="fixed inset-0 flex items-center justify-center p-4">
-//           <Transition.Child as={Fragment} enter="transition ease-out duration-200" enterFrom="opacity-0 translate-y-2 scale-95" enterTo="opacity-100 translate-y-0 scale-100" leave="transition ease-in duration-150" leaveFrom="opacity-100 translate-y-0 scale-100" leaveTo="opacity-0 translate-y-2 scale-95">
-//             <Dialog.Panel className="w-full max-w-md bg-white rounded-2xl shadow-card border p-5">
-//               <Dialog.Title className="text-lg font-semibold">Bulk CSV Import</Dialog.Title>
-//               <div className="mt-3 text-sm">Upload a CSV file to bulk create leads.</div>
-//               <div className="mt-3">
-//                 <input type="file" accept=".csv" onChange={handleFileChange} className="w-full" />
-//               </div>
-//               <div className="mt-4 flex justify-end gap-2">
-//                 <button onClick={onClose} className="px-3 py-2 rounded-lg border text-sm">Cancel</button>
-//                 <button onClick={confirm} disabled={!file} className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm disabled:opacity-50">Import</button>
-//               </div>
-//             </Dialog.Panel>
-//           </Transition.Child>
-//         </div>
-//       </Dialog>
-//     </Transition>
-//   )
-// }
 function BulkCsvImportModal({ open, onClose, onConfirm }) {
   const [file, setFile] = useState(null);
   const [products, setProducts] = useState([]);
