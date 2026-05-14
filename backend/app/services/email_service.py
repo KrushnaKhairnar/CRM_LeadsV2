@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pathlib import Path
-import smtplib, os
+import smtplib, os, asyncio
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
@@ -19,7 +19,7 @@ EMAIL_HOST_PASSWORD = os.getenv("SMTP_PASS")
 DEFAULT_FROM_EMAIL = os.getenv("SMTP_FROM")
 
 
-def send_email(subject: str, recipient: str, template_name: str, context: Dict[str, str]):
+async def send_email(subject: str, recipient: str, template_name: str, context: Dict[str, str]):
     try:
         BASE_DIR = Path(__file__).resolve().parent.parent
         templates_path = BASE_DIR / "templates"
@@ -40,20 +40,23 @@ def send_email(subject: str, recipient: str, template_name: str, context: Dict[s
          
         msg.attach(MIMEText(rendered_html, 'html'))
 
-        # Connect to SMTP server and send email
-        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
-            server.starttls()
-            server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
-            server.sendmail(DEFAULT_FROM_EMAIL, recipient, msg.as_string())
+        def _send():
+            # Connect to SMTP server and send email
+            with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
+                server.starttls()
+                server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
+                server.sendmail(DEFAULT_FROM_EMAIL, recipient, msg.as_string())
+        
+        await asyncio.to_thread(_send)
 
         return True
     except Exception as ex:
         # Notify you via email if sending fails
-        notify_admin_of_failure(recipient, str(ex))
+        await notify_admin_of_failure(recipient, str(ex))
         return False
 
 
-def notify_admin_of_failure(failed_recipient: str, error_message: str):
+async def notify_admin_of_failure(failed_recipient: str, error_message: str):
     try:
         admin_email = "krushna.khairnar@digikore.com"  
         subject = f"Email Failure Alert: Unable to send to {failed_recipient}"
@@ -74,10 +77,13 @@ def notify_admin_of_failure(failed_recipient: str, error_message: str):
         msg['To'] = admin_email
         msg.attach(MIMEText(body, 'html'))
 
-        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
-            server.starttls()
-            server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
-            server.sendmail(DEFAULT_FROM_EMAIL, admin_email, msg.as_string())
+        def _send():
+            with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
+                server.starttls()
+                server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
+                server.sendmail(DEFAULT_FROM_EMAIL, admin_email, msg.as_string())
+
+        await asyncio.to_thread(_send)
 
     except Exception as e:
         print(f"Failed to notify admin about email error: {e}")

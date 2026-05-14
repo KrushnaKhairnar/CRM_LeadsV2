@@ -134,7 +134,7 @@ async def scan_and_notify(db):
                         f"{user['email']}"
                     )
 
-                    send_email(
+                    await send_email(
                         recipient=user["email"],
                         subject=title,
                         template_name="follow_up_email.html",
@@ -289,7 +289,7 @@ async def compute_overdue(db):
         print(f"Sending overdue email to {user_email}")
 
         # Send email
-        send_email(
+        await send_email(
             recipient=user_email,
             subject="Overdue Follow-up Reminder",
             template_name="follow_up_email.html",
