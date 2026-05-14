@@ -11,7 +11,8 @@ from app.services.followups_service import FollowupsService
 from app.models.leads import LeadCreate, LeadOut, LeadPatch, AssignRequest, BulkAssignRequest, BulkStatusRequest, BulkTemperatureRequest, BulkStageRequest, NoteCreate
 from app.models.followups import FollowupCreate
 from app.repositories.audit import AuditRepository
-
+from datetime import timezone
+from zoneinfo import ZoneInfo
 router = APIRouter()
 
 def _filters(status: Optional[str], temperature: Optional[str], pipeline_stage: Optional[str], assigned_to: Optional[str], q: Optional[str]):
@@ -212,6 +213,23 @@ async def get_lead(
         raise HTTPException(status_code=404, detail="Lead not found")
 
     ensure_can_view(user, lead)
+
+    # Convert UTC -> IST for next_followup_at
+    if lead.get("next_followup_at"):
+        utc_dt = lead["next_followup_at"]
+
+        # Ensure datetime is timezone-aware
+        if utc_dt.tzinfo is None:
+            utc_dt = utc_dt.replace(tzinfo=timezone.utc)
+
+        # Convert to IST
+        ist_dt = utc_dt.astimezone(ZoneInfo("Asia/Kolkata"))
+
+        # Optional: format as string
+        lead["next_followup_at"] = ist_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        # If you want ISO format instead, use:
+        # lead["next_followup_at"] = ist_dt.isoformat()
 
     # Get project name using project_id
     if lead.get("project_id"):

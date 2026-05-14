@@ -79,6 +79,7 @@ class LeadOut(LeadBase):
     assigned_to: Optional[str] = None
     assigned_by: Optional[str] = None
     assigned_at: Optional[datetime] = None
+    next_followup_at: Optional[datetime] = None
     created_by: str
     created_at: datetime
     updated_at: datetime

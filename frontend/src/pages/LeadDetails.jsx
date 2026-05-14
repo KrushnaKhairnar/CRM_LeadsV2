@@ -380,10 +380,16 @@ export default function LeadDetails() {
                 onSave={(date) => {
                   if (isAdmin) return;
 
+                  console.log("Selected Date:", date);
+
+                  const utcDate = date ? new Date(date).toISOString() : null;
+
+                  console.log("UTC Date:", utcDate);
+
                   setNextFollowup(date || "");
 
                   patchMutation.mutate({
-                    next_followup_at: date || null,
+                    next_followup_at: utcDate,
                   });
                 }}
               />
