@@ -4,6 +4,7 @@ import { LeadsAPI, AnalyticsAPI } from "../api/endpoints";
 import { Link } from "react-router-dom";
 import Badge from "../components/Badge";
 import CreateLeadModal from "./components/CreateLeadModal";
+import { CheckCircle2, Clock3, Plus, Target, TrendingDown } from "lucide-react";
 
 export default function SalesDashboard() {
   const { data } = useQuery({
@@ -34,28 +35,30 @@ export default function SalesDashboard() {
 
   return (
     <div className="space-y-6 animate-in-up">
-      <div>
-        <div className="text-2xl font-semibold tracking-tight">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+        <div className="text-2xl font-extrabold tracking-tight text-slate-950">
           Sales Dashboard
         </div>
-        <div className="text-sm text-slate-500">
+        <div className="text-sm text-slate-500 mt-1">
           Your assigned/created leads and followups
         </div>
-        <div className="mt-3">
+        </div>
+        <div>
           <button
             onClick={() => setOpenCreate(true)}
-            className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm shadow-soft hover:shadow-hover"
+            className="crm-btn crm-btn-primary"
           >
-            + Quick Add Lead
+            <Plus size={16} /> Quick Add Lead
           </button>
         </div>
       </div>
 
       <div className="grid md:grid-cols-4 gap-4">
-        <Card title="My Leads (30d)" value={ana?.total ?? "-"} />
-        <Card title="Won" value={ana?.won ?? "-"} />
-        <Card title="Lost" value={ana?.lost ?? "-"} />
-        <Card title="Overdue" value={ana?.overdue ?? "-"} />
+        <Card tone="blue" icon={<Target size={18} />} title="My Leads (30d)" value={ana?.total ?? "-"} hint="Assigned / created" />
+        <Card tone="green" icon={<CheckCircle2 size={18} />} title="Won" value={ana?.won ?? "-"} hint="Closed successfully" />
+        <Card tone="rose" icon={<TrendingDown size={18} />} title="Lost" value={ana?.lost ?? "-"} hint="Lost opportunities" />
+        <Card tone="orange" icon={<Clock3 size={18} />} title="Overdue" value={ana?.overdue ?? "-"} hint="Needs followup" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
@@ -68,7 +71,7 @@ export default function SalesDashboard() {
               <Link
                 key={l._id}
                 to={`/leads/${l.lead_id}`}
-                className="block border rounded-xl p-3 hover:bg-slate-50 transition"
+                className="block border border-slate-100 rounded-xl p-3 hover:bg-brand-50/50 transition"
               >
                 <div className="font-medium">{l.name}</div>
                 <div className="text-xs text-slate-500">
@@ -90,7 +93,7 @@ export default function SalesDashboard() {
               <Link
                 key={l._id}
                 to={`/leads/${l.lead_id}`}
-                className="block border border-rose-200 rounded-xl p-3 hover:bg-rose-50 transition"
+                className="block border border-rose-100 rounded-xl p-3 hover:bg-rose-50 transition"
               >
                 <div className="font-medium">{l.name}</div>
                 <div className="text-xs text-rose-700">
@@ -118,7 +121,7 @@ export default function SalesDashboard() {
             </thead>
             <tbody>
               {(data?.items || []).map((l) => (
-                <tr key={l._id} className="border-t">
+                <tr key={l._id} className="border-t border-slate-100">
                   <td className="py-2">{l.name}</td>
                   <td>
                     <Badge value={l.status} />
@@ -170,19 +173,34 @@ export default function SalesDashboard() {
   );
 }
 
-function Card({ title, value }) {
+function Card({ title, value, hint, icon, tone = "blue" }) {
+  const tones = {
+    blue: "bg-[#eef4ff] text-blue-700 ring-blue-100",
+    green: "bg-[#effbf5] text-emerald-700 ring-emerald-100",
+    orange: "bg-[#fff5ec] text-orange-700 ring-orange-100",
+    rose: "bg-rose-50 text-rose-700 ring-rose-100",
+  };
+
   return (
-    <div className="bg-white border rounded-2xl p-4 shadow-soft transition hover:shadow-hover hover:-translate-y-0.5">
-      <div className="text-xs text-slate-500">{title}</div>
-      <div className="text-2xl font-semibold mt-1">{value}</div>
+    <div className={`crm-card crm-card-hover p-4 ${tones[tone]?.split(" ")[0] || ""}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium text-slate-600">{title}</div>
+          <div className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">{value}</div>
+          <div className="mt-1 text-[11px] text-slate-500">{hint}</div>
+        </div>
+        <div className={`rounded-xl p-2 ring-1 ${tones[tone] || tones.blue}`}>
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }
 
 function Panel({ title, children }) {
   return (
-    <div className="bg-white border rounded-2xl p-4 shadow-soft transition hover:shadow-hover">
-      <div className="font-medium">{title}</div>
+    <div className="crm-card p-4 transition hover:shadow-hover">
+      <div className="crm-panel-title">{title}</div>
       <div className="mt-3">{children}</div>
     </div>
   );

@@ -4,14 +4,29 @@
 
 :root {
   color-scheme: light;
+  --crm-bg: #eef2ff;
+  --crm-surface: #ffffff;
+  --crm-surface-muted: #f8faff;
+  --crm-border: #e5e9f6;
+  --crm-border-strong: #d8def0;
+  --crm-text: #111827;
+  --crm-muted: #6b7280;
+  --crm-brand: #4338ca;
+  --crm-navy: #101b3d;
+  --crm-navy-2: #0b1533;
+  --crm-soft-blue: #eef4ff;
+  --crm-soft-purple: #f1efff;
+  --crm-soft-green: #effbf5;
+  --crm-soft-orange: #fff5ec;
 }
 
 
 html,
 body {
-  background: #f8fafc;
-  /* slate-50 */
-  font-family: "Baloo 2", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--crm-bg);
+  color: var(--crm-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
 }
 
 * {
@@ -22,9 +37,7 @@ body {
 @layer base {
   html.dark body {
     background: #0f172a;
-    /* slate-900 */
     color: #e2e8f0;
-    /* slate-200 */
   }
 
 .custom-datetime::-webkit-calendar-picker-indicator {
@@ -39,10 +52,220 @@ body {
   input[type="email"],
   select,
   textarea {
-    @apply rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition bg-white/50 backdrop-blur-md border border-white/60 shadow-sm dark:bg-slate-800/40 dark:border-slate-700;
+    @apply rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition bg-white border border-slate-200 shadow-none dark:bg-slate-800 dark:border-slate-700;
   }
 
   button {
     @apply transition duration-200;
+  }
+
+  table {
+    @apply text-xs;
+  }
+
+  th {
+    @apply text-[11px] uppercase tracking-[0.04em] font-semibold;
+  }
+
+  td,
+  th {
+    @apply align-middle;
+  }
+}
+
+@layer components {
+  .rounded-2xl,
+  .rounded-3xl {
+    border-radius: 18px;
+  }
+
+  .rounded-xl {
+    border-radius: 14px;
+  }
+
+  .rounded-full {
+    border-radius: 9999px;
+  }
+
+  .bg-white\/60,
+  .bg-white\/70,
+  .bg-white\/80 {
+    background-color: rgba(255, 255, 255, 0.92);
+  }
+
+  .backdrop-blur,
+  .backdrop-blur-md,
+  .backdrop-blur-xl {
+    backdrop-filter: none;
+  }
+
+  .shadow-card,
+  .shadow-hover {
+    box-shadow: 0 20px 55px rgba(26, 31, 54, 0.12);
+  }
+
+  .shadow-soft {
+    box-shadow: 0 10px 30px rgba(26, 31, 54, 0.07);
+  }
+
+  .animate-in-up,
+  .animate-in-pop,
+  .animate-in-down,
+  .animate-in-fade {
+    animation-duration: 160ms;
+  }
+
+  .bg-gradient-to-r.from-brand-600,
+  .bg-gradient-to-br.from-brand-500,
+  .bg-gradient-to-b.from-brand-50,
+  .bg-gradient-to-br.from-brand-50 {
+    background-image: none;
+  }
+
+  .from-brand-600,
+  .from-brand-500,
+  .to-accent-600,
+  .to-accent-700 {
+    --tw-gradient-from: var(--crm-brand);
+    --tw-gradient-to: var(--crm-brand);
+  }
+
+  main h1,
+  main .text-2xl {
+    font-size: 1.35rem;
+    line-height: 1.8rem;
+  }
+
+  main .text-3xl {
+    font-size: 1.375rem;
+    line-height: 1.75rem;
+  }
+
+  .p-6 {
+    padding: 1.25rem;
+  }
+
+  .p-5 {
+    padding: 1rem;
+  }
+
+  .p-4 {
+    padding: 1rem;
+  }
+
+  .py-3 {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  .px-4 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+  }
+
+  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
+  }
+
+  .crm-page-shell {
+    min-height: 100vh;
+    background:
+  radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 32rem),
+  radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.10), transparent 28rem),
+  linear-gradient(135deg, #eef4ff 0%, #f8fbff 45%, #eef2ff 100%);
+   
+  }
+
+    .crm-app-frame {
+  overflow: hidden;
+  }
+
+  .crm-card {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid var(--crm-border);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(26, 31, 54, 0.07);
+  }
+
+  .crm-card-hover {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  .crm-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: rgba(67, 56, 202, 0.20);
+    box-shadow: 0 18px 38px rgba(67, 56, 202, 0.14);
+  }
+
+  .crm-panel-title {
+    color: #111827;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .crm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 10px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+
+  .crm-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .crm-btn-primary {
+    background: #4338ca;
+    color: white;
+    box-shadow: 0 12px 24px rgba(67, 56, 202, 0.24);
+  }
+
+  .crm-btn-soft {
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid var(--crm-border);
+  }
+
+  table thead {
+    background: #f8faff;
+  }
+
+  table tbody tr {
+    transition: background-color 160ms ease;
+  }
+
+  table tbody tr:hover {
+    background-color: #f7f8ff;
+  }
+
+  table th {
+    color: #6b7280;
+  }
+
+  table td {
+    color: #1f2937;
+  }
+
+  .recharts-cartesian-grid line {
+    stroke: #eef2f7;
+  }
+
+  .recharts-text {
+    fill: #6b7280;
+    font-size: 11px;
   }
 }

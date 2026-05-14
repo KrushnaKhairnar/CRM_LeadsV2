@@ -16,7 +16,14 @@ import {
   Bar,
 } from "recharts";
 import { Link } from "react-router-dom";
-import { UserPlus } from "lucide-react";
+import {
+  Banknote,
+  CheckCircle2,
+  Clock3,
+  Target,
+  UserPlus,
+  Users2,
+} from "lucide-react";
 import RegisterUserModal from "./components/RegisterUserModal";
 import { useAuthStore } from "../auth/store";
 
@@ -91,12 +98,12 @@ export default function ManagerDashboard() {
   }, [data, myTeam]);
 
   const pieColors = [
+    "#4338ca",
     "#10b981",
-    "#14b8a6",
     "#f59e0b",
-    "#0ea5e9",
+    "#2563eb",
     "#f43f5e",
-    "#a3e635",
+    "#8b5cf6",
   ];
 
   return (
@@ -104,10 +111,10 @@ export default function ManagerDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-2xl font-semibold tracking-tight">
+          <div className="text-2xl font-extrabold tracking-tight text-slate-950">
             Manager Dashboard
           </div>
-          <div className="text-sm text-slate-500">
+          <div className="text-sm text-slate-500 mt-1">
             Overview and team performance
           </div>
         </div>
@@ -115,14 +122,14 @@ export default function ManagerDashboard() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setOpenRegister(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 text-white hover:from-brand-700 hover:to-accent-700 text-sm shadow-soft transition"
+            className="crm-btn crm-btn-primary"
           >
             <UserPlus size={16} />
             Register Sales Person
           </button>
 
           <select
-            className="text-sm rounded-xl border px-3 py-2"
+            className="text-xs rounded-xl border px-3 py-2 bg-white shadow-sm"
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
           >
@@ -135,24 +142,76 @@ export default function ManagerDashboard() {
 
       {/* Cards */}
       <div className="grid md:grid-cols-5 gap-4">
-        <Card title="My Sales Team" value={myTeam?.length ?? 0} />
-        <Card title="Total Leads" value={data?.total_leads ?? 0} />
-        <Card title="Overdue Followups" value={data?.overdue_followups ?? 0} />
-        <Card title="Today's Followups" value={data?.today_followups ?? 0} />
         <Card
+          tone="purple"
+          icon={<Users2 size={18} />}
+          title="My Sales Team"
+          value={myTeam?.length ?? 0}
+          hint="Active users"
+        />
+        <Card
+          tone="blue"
+          icon={<Target size={18} />}
+          title="Total Leads"
+          value={data?.total_leads ?? 0}
+          hint={`Last ${days} days`}
+        />
+        <Card
+          tone="orange"
+          icon={<Clock3 size={18} />}
+          title="Overdue Followups"
+          value={data?.overdue_followups ?? 0}
+          hint="Needs attention"
+        />
+        <Card
+          tone="green"
+          icon={<CheckCircle2 size={18} />}
+          title="Today's Followups"
+          value={data?.today_followups ?? 0}
+          hint="Scheduled today"
+        />
+        <Card
+          tone="mint"
+          icon={<Banknote size={18} />}
           title="Revenue (today)"
           value={(rev?.today ?? 0).toLocaleString("en-GB")}
+          hint="Collected today"
         />
       </div>
 
       {/* Charts */}
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Status */}
+        <Panel title="Sales Overview" className="lg:col-span-2">
+          <div className="h-64">
+            <ResponsiveContainer>
+              <AreaChart data={rev?.last15 || []}>
+                <XAxis dataKey="date" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Legend />
+                <Area
+                  dataKey="total"
+                  stroke="#4338ca"
+                  strokeWidth={3}
+                  fill="#4338ca18"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
         <Panel title="Leads by Status">
           <div className="h-64">
             <ResponsiveContainer>
               <PieChart>
-                <Pie data={statusData} dataKey="value" outerRadius={90} label>
+                <Pie
+                  data={statusData}
+                  dataKey="value"
+                  innerRadius={56}
+                  outerRadius={88}
+                  paddingAngle={4}
+                >
                   {statusData.map((_, idx) => (
                     <Cell key={idx} fill={pieColors[idx % pieColors.length]} />
                   ))}
@@ -163,52 +222,79 @@ export default function ManagerDashboard() {
             </ResponsiveContainer>
           </div>
         </Panel>
+      </div>
 
-        {/* Temperature */}
+      <div className="grid lg:grid-cols-3 gap-4">
         <Panel title="Leads by Temperature">
           <div className="h-64">
             <ResponsiveContainer>
               <AreaChart data={tempData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <defs>
+                  <linearGradient
+                    id="projectGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity={0.4} />
+                    <stop
+                      offset="100%"
+                      stopColor="#818cf8"
+                      stopOpacity={0.05}
+                    />
+                  </linearGradient>
+                </defs>
+
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                />
+
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                />
+
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "14px",
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 6px 20px rgba(15,23,42,0.08)",
+                  }}
+                />
+
                 <Legend />
-                <Area dataKey="value" stroke="#14b8a6" fill="#14b8a620" />
+
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#6366f1"
+                  strokeWidth={3}
+                  fill="url(#projectGradient)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </Panel>
 
-        {/* Sales */}
-        <Panel title="Leads by Sales Person">
+        <Panel title="Leads by Sales Person" className="lg:col-span-2">
           <div className="h-64">
             <ResponsiveContainer>
               <BarChart data={salesData}>
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#10b981" />
+                <Bar dataKey="value" fill="#4338ca" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Panel>
       </div>
-
-      {/* Revenue */}
-      <Panel title="Revenue (last 15 days)">
-        <div className="h-64">
-          <ResponsiveContainer>
-            <AreaChart data={rev?.last15 || []}>
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Area dataKey="total" stroke="#10b981" fill="#10b98120" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </Panel>
 
       {/* Recent Leads */}
       <Panel title="Recent Leads">
@@ -226,7 +312,7 @@ export default function ManagerDashboard() {
 
             <tbody>
               {(leads?.items || []).map((l) => (
-                <tr key={l._id} className="border-t">
+                <tr key={l._id} className="border-t border-slate-100">
                   <td className="py-2">{l.name}</td>
                   <td>{l.company || "-"}</td>
                   <td>{l.status}</td>
@@ -249,7 +335,7 @@ export default function ManagerDashboard() {
                       to={`/leads/${l.lead_id}`}
                       className="text-brand-700 hover:underline"
                     >
-                      Open
+                      View more
                     </Link>
                   </td>
                 </tr>
@@ -273,19 +359,39 @@ export default function ManagerDashboard() {
   );
 }
 
-function Card({ title, value }) {
+function Card({ title, value, hint, icon, tone = "blue" }) {
+  const tones = {
+    purple: "bg-[#f1efff] text-brand-700 ring-brand-100",
+    blue: "bg-[#eef4ff] text-blue-700 ring-blue-100",
+    green: "bg-[#effbf5] text-emerald-700 ring-emerald-100",
+    mint: "bg-[#effbf5] text-emerald-700 ring-emerald-100",
+    orange: "bg-[#fff5ec] text-orange-700 ring-orange-100",
+  };
+
   return (
-    <div className="bg-white/60 backdrop-blur-xl border rounded-2xl p-4 shadow-soft">
-      <div className="text-xs text-slate-500">{title}</div>
-      <div className="text-2xl font-semibold mt-1">{value}</div>
+    <div
+      className={`crm-card crm-card-hover p-4 ${tones[tone]?.split(" ")[0] || ""}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium text-slate-600">{title}</div>
+          <div className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">
+            {value}
+          </div>
+          <div className="mt-1 text-[11px] text-slate-500">{hint}</div>
+        </div>
+        <div className={`rounded-xl p-2 ring-1 ${tones[tone] || tones.blue}`}>
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }
 
-function Panel({ title, children }) {
+function Panel({ title, children, className = "" }) {
   return (
-    <div className="bg-white/60 backdrop-blur-xl border rounded-2xl p-4 shadow-soft">
-      <div className="font-medium">{title}</div>
+    <div className={`crm-card p-4 ${className}`}>
+      <div className="crm-panel-title">{title}</div>
       <div className="mt-3">{children}</div>
     </div>
   );

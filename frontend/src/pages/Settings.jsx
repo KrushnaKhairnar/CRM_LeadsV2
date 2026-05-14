@@ -58,14 +58,14 @@ function ManagerAwards() {
       <div className="grid md:grid-cols-2 gap-3 mt-3">
         <div>
           <div className="text-sm font-medium">Sales User</div>
-          <select className="mt-1 w-full" value={payload.user_id} onChange={e => setPayload(p => ({ ...p, user_id: e.target.value }))}>
+          <select className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300" value={payload.user_id} onChange={e => setPayload(p => ({ ...p, user_id: e.target.value }))}>
             <option value="">Select user</option>
             {(sales || []).map(u => <option key={u.user_id} value={u.user_id}>{u.username}</option>)}
           </select>
         </div>
         <div>
           <div className="text-sm font-medium">Badge</div>
-          <select className="mt-1 w-full" value={payload.badge_key} onChange={e => setPayload(p => ({ ...p, badge_key: e.target.value }))}>
+          <select className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300" value={payload.badge_key} onChange={e => setPayload(p => ({ ...p, badge_key: e.target.value }))}>
             <option value="closer_5">Closed/Won 5 Deals</option>
             <option value="creator_5">Created 5 Leads</option>
             <option value="creator_20">Created 20 Leads</option>
@@ -75,11 +75,11 @@ function ManagerAwards() {
         </div>
         <div className="md:col-span-2">
           <div className="text-sm font-medium">Title</div>
-          <input className="mt-1 w-full" value={payload.title} onChange={e => setPayload(p => ({ ...p, title: e.target.value }))} placeholder="Optional" />
+          <input className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300" value={payload.title} onChange={e => setPayload(p => ({ ...p, title: e.target.value }))} placeholder="Optional" />
         </div>
         <div className="md:col-span-2">
           <div className="text-sm font-medium">Description</div>
-          <textarea className="mt-1 w-full" rows="3" value={payload.description} onChange={e => setPayload(p => ({ ...p, description: e.target.value }))} placeholder="Optional" />
+          <textarea className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300" rows="3" value={payload.description} onChange={e => setPayload(p => ({ ...p, description: e.target.value }))} placeholder="Optional" />
         </div>
         <div className="md:col-span-2 flex justify-end">
           <button onClick={submit} className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50">Award</button>

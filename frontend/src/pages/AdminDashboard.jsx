@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, Pencil, Shield, UserPlus, Users2 } from "lucide-react";
+import { Clock, ContactRound, Pencil, Shield, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { UsersAPI } from "../api/endpoints";
@@ -59,17 +59,17 @@ export default function AdminDashboard() {
     <div className="space-y-6 animate-in-up">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-2xl font-semibold tracking-tight">
+          <div className="text-2xl font-extrabold tracking-tight text-slate-950">
             Admin Dashboard
           </div>
-          <div className="text-sm text-slate-500">
+          <div className="text-sm text-slate-500 mt-1">
             Manage your organization's team hierarchy
           </div>
         </div>
 
         <button
           onClick={() => setOpenRegister(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 text-white hover:from-brand-700 hover:to-accent-700 text-sm shadow-soft"
+          className="crm-btn crm-btn-primary"
         >
           <UserPlus size={16} />
           Register Manager
@@ -79,10 +79,10 @@ export default function AdminDashboard() {
       {/* Stats */}
       <div className="grid md:grid-cols-3 gap-4">
         <StatCard
-          icon={<Users2 size={20} />}
+          icon={<ContactRound size={21} />}
           title="Total Managers"
           value={managerCount}
-          gradient="from-brand-500 to-brand-600"
+          gradient="from-green-500 to-blue-600"
         />
         <StatCard
           icon={<Shield size={20} />}
@@ -99,9 +99,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Managers Table */}
-      <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-2xl shadow-soft overflow-hidden">
-        <div className="p-4 border-b bg-slate-50/50">
-          <div className="font-medium text-slate-800">Registered Managers</div>
+      <div className="crm-card overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="crm-panel-title">Registered Managers</div>
           <div className="text-xs text-slate-500 mt-0.5">
             Each manager can create and manage their own sales team
           </div>
@@ -132,18 +132,20 @@ export default function AdminDashboard() {
 
               {!isLoading &&
                 (managers || [])
-                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                  .sort(
+                    (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                  )
                   .map((m, idx) => (
                     <tr
                       key={m.user_id}
-                      className="border-t odd:bg-white even:bg-slate-50/60"
+                      className="border-t border-slate-100 odd:bg-white even:bg-slate-50/50"
                     >
                       <td className="py-3 px-4 text-slate-400">{idx + 1}</td>
 
                       <td className="py-3 px-4 font-medium">{m.username}</td>
 
                       <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold ring-1 ring-brand-100">
                           <Shield size={12} />
                           {m.role}
                         </span>
@@ -162,10 +164,10 @@ export default function AdminDashboard() {
                       {/* STATUS */}
                       <td className="py-3 px-4">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          className={`px-3 py-1 rounded-full text-xs font-bold ring-1 ring-inset ${
                             m.is_active
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
+                              ? "bg-green-50 text-green-700 ring-green-100"
+                              : "bg-red-50 text-red-700 ring-red-100"
                           }`}
                         >
                           {m.is_active ? "Active" : "Inactive"}
@@ -176,7 +178,7 @@ export default function AdminDashboard() {
                       <td className="py-3 px-4">
                         <button
                           onClick={() => openEditModal(m)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-xs"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-xs font-bold shadow-sm"
                         >
                           <Pencil size={14} />
                           Edit
@@ -198,7 +200,7 @@ export default function AdminDashboard() {
 
       {openEdit && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 shadow-card">
             <h2 className="text-xl font-semibold">Edit Manager</h2>
 
             <input
@@ -278,7 +280,7 @@ export default function AdminDashboard() {
 
 function StatCard({ icon, title, value, gradient }) {
   return (
-    <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-2xl p-5 shadow-soft">
+    <div className="crm-card crm-card-hover p-5">
       <div className="flex items-center gap-3">
         <div
           className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white`}
@@ -287,8 +289,10 @@ function StatCard({ icon, title, value, gradient }) {
         </div>
 
         <div>
-          <div className="text-xs text-slate-500">{title}</div>
-          <div className="text-2xl font-semibold mt-0.5">{value}</div>
+          <div className="text-xs font-medium text-slate-500">{title}</div>
+          <div className="text-2xl font-extrabold mt-0.5 tracking-tight">
+            {value}
+          </div>
         </div>
       </div>
     </div>

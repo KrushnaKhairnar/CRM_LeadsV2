@@ -5,30 +5,30 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Baloo 2"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', '"Segoe UI"', 'sans-serif'],
       },
       colors: {
         brand: {
-          50: "#ecfdf5",   // emerald-50
-          100: "#d1fae5",
-          200: "#a7f3d0",
-          500: "#10b981",  // emerald-500
-          600: "#059669",  // emerald-600
-          700: "#047857",  // emerald-700
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          500: "#4f46e5",
+          600: "#4338ca",
+          700: "#3730a3",
         },
         accent: {
-          500: "#14b8a6",  // teal-500
-          600: "#0d9488",
-          700: "#0f766e",
+          500: "#2563eb",
+          600: "#1d4ed8",
+          700: "#1e40af",
         }
       },
       boxShadow: {
-        soft: "0 1px 2px rgba(0,0,0,0.06)",
-        card: "0 6px 20px rgba(16,185,129,0.08)",
-        hover: "0 10px 30px rgba(16,185,129,0.12)",
+        soft: "0 10px 30px rgba(26,31,54,0.07)",
+        card: "0 20px 55px rgba(26,31,54,0.12)",
+        hover: "0 18px 38px rgba(67,56,202,0.14)",
       },
       backgroundImage: {
-        'brand-radial': 'radial-gradient(1200px circle at 20% 0%, rgba(20,184,166,0.10), transparent 60%), radial-gradient(1000px circle at 80% 20%, rgba(16,185,129,0.08), transparent 60%)',
+        'brand-radial': 'linear-gradient(135deg, #eef2ff 0%, #f8fbff 48%, #f1f5ff 100%)',
       },
       keyframes: {
         'fade-in': {

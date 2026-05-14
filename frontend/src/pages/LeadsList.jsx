@@ -172,8 +172,8 @@ export default function LeadsList() {
     <div className="space-y-4 animate-in-up">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-2xl font-semibold tracking-tight">Leads</div>
-          <div className="text-sm text-slate-500">
+          <div className="text-2xl font-extrabold tracking-tight text-slate-950">Leads</div>
+          <div className="text-sm text-slate-500 mt-1">
             Search, filter, and manage lead pipeline
           </div>
         </div>
@@ -183,20 +183,20 @@ export default function LeadsList() {
               <button
                 onClick={() => exportSampleCsv()}
                 title="Download sample CSV format for lead import"
-                className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700 hover:bg-slate-00"
+                className="crm-btn crm-btn-soft"
               >
                 Download Sample Csv
               </button>
               
               <button
                 onClick={() => setOpenCsvImport(true)}
-                className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700"
+                className="crm-btn crm-btn-soft"
               >
                 Import CSV
               </button>
               <button
                 onClick={exportCsv}
-                className="px-3 py-2 rounded-lg border border-brand-200 bg-white hover:bg-brand-50 text-sm text-brand-700"
+                className="crm-btn crm-btn-soft"
               >
                 Export CSV
               </button>
@@ -204,7 +204,7 @@ export default function LeadsList() {
           )}
           <button
             onClick={() => setOpenCreate(true)}
-            className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm shadow-soft hover:shadow-hover"
+            className="crm-btn crm-btn-primary"
           >
             + New Lead
           </button>
@@ -217,13 +217,13 @@ export default function LeadsList() {
         </div>
       </div>
 
-      <div className="bg-white border rounded-2xl p-4 shadow-soft">
+      <div className="crm-card p-4">
         <div className="grid md:grid-cols-5 gap-3">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name / phone / company"
-            className="md:col-span-2"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
           />
           <select
             value={status}
@@ -264,7 +264,7 @@ export default function LeadsList() {
             <select
               value={assigned_to}
               onChange={(e) => setAssignedTo(e.target.value)}
-              className="text-sm md:col-span-2"
+              className="text-sm"
             >
               <option value="">All Sales (Assigned To)</option>
               {(salesUsers || []).map((u) => (
@@ -279,36 +279,36 @@ export default function LeadsList() {
       </div>
 
       {isManager && selectedCount > 0 && (
-        <div className="bg-white border rounded-2xl p-4 shadow-soft flex items-center justify-between">
+        <div className="crm-card p-4 flex items-center justify-between">
           <div className="text-sm">{selectedCount} selected</div>
           <div className="flex gap-2">
             <button
               onClick={() => setOpenBulkAssign(true)}
-              className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
+              className="crm-btn crm-btn-soft"
             >
               Bulk Assign
             </button>
             <button
               onClick={() => setOpenBulkStatus(true)}
-              className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
+              className="crm-btn crm-btn-soft"
             >
               Bulk Status
             </button>
             <button
               onClick={() => setOpenBulkTemp(true)}
-              className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
+              className="crm-btn crm-btn-soft"
             >
               Bulk Temp
             </button>
             <button
               onClick={() => setOpenBulkStage(true)}
-              className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
+              className="crm-btn crm-btn-soft"
             >
               Bulk Stage
             </button>
             <button
               onClick={clearSelected}
-              className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
+              className="crm-btn crm-btn-soft"
             >
               Clear
             </button>
@@ -316,7 +316,7 @@ export default function LeadsList() {
         </div>
       )}
 
-      <div className="bg-white border rounded-2xl overflow-hidden shadow-soft">
+      <div className="crm-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-500 sticky top-0 z-[1]">
@@ -424,7 +424,7 @@ export default function LeadsList() {
               {(data?.items || []).map((l) => (
                 <tr
                   key={l.lead_id}
-                  className="border-t odd:bg-white even:bg-slate-50/60 hover:bg-brand-50/50 transition"
+                  className="border-t border-slate-100 odd:bg-white even:bg-slate-50/50 hover:bg-brand-50/50 transition"
                 >
                   <td className="py-3 px-4">
                     <input
@@ -499,7 +499,7 @@ export default function LeadsList() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between p-4 border-t bg-white">
+        <div className="flex items-center justify-between p-4 border-t border-slate-100 bg-white">
           <div className="text-xs text-slate-500">
             Page {page} of {totalPages} • Total {data?.total || 0}
           </div>
@@ -507,14 +507,14 @@ export default function LeadsList() {
             <button
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-2 rounded-lg border text-sm disabled:opacity-50 hover:bg-slate-50"
+              className="crm-btn crm-btn-soft disabled:opacity-50"
             >
               Prev
             </button>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-2 rounded-lg border text-sm disabled:opacity-50 hover:bg-slate-50"
+              className="crm-btn crm-btn-soft disabled:opacity-50"
             >
               Next
             </button>

@@ -150,136 +150,163 @@ export default function CreateLeadModal({ open, onClose, onCreated, initial }) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Panel className="w-full max-w-2xl bg-white rounded-2xl shadow-card border p-5">
-              <Dialog.Title className="text-lg font-semibold">
-                Create Lead
-              </Dialog.Title>
+            <Dialog.Panel className="w-full max-w-3xl rounded-3xl bg-white border border-slate-200 shadow-xl overflow-hidden">
+  
+  {/* Header */}
+  <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-blue-50">
+    <div>
+      <Dialog.Title className="text-xl font-semibold text-slate-800">
+        Create Lead
+      </Dialog.Title>
 
-              <form
-                className="mt-4 grid md:grid-cols-2 gap-3"
-                onSubmit={handleSubmit(onSubmit)}
-              >
-                <Field label="Name" error={errors.name?.message}>
-                  <input className="w-full" {...register("name")} />
-                </Field>
+      <p className="text-sm text-slate-500 mt-1">
+        Add a new lead to your CRM pipeline
+      </p>
+    </div>
+  </div>
 
-                <Field label="Phone" error={errors.phone?.message}>
-                  <input className="w-full" {...register("phone")} />
-                </Field>
+  {/* Form */}
+  <form
+    className="p-6 grid grid-cols-1 md:grid-cols-2 gap-3"
+    onSubmit={handleSubmit(onSubmit)}
+  >
+    <Field label="Name" error={errors.name?.message}>
+      <input
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("name")}
+      />
+    </Field>
 
-                <Field label="Email" error={errors.email?.message}>
-                  <input className="w-full" {...register("email")} />
-                </Field>
+    <Field label="Phone" error={errors.phone?.message}>
+      <input
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("phone")}
+      />
+    </Field>
 
-                <Field label="Company" error={errors.company?.message}>
-                  <input className="w-full" {...register("company")} />
-                </Field>
+    <Field label="Email" error={errors.email?.message}>
+      <input
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("email")}
+      />
+    </Field>
 
-                <Field label="Source">
-                  <input
-                    className="w-full"
-                    {...register("source")}
-                    placeholder="facebook/referral/walk-in"
-                  />
-                </Field>
+    <Field label="Company" error={errors.company?.message}>
+      <input
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("company")}
+      />
+    </Field>
 
-                <Field label="Expected Value">
-                  <input
-                    type="number"
-                    className="w-full"
-                    {...register("expected_value")}
-                  />
-                </Field>
+    <Field label="Source">
+      <input
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("source")}
+        placeholder="facebook / referral / walk-in"
+      />
+    </Field>
 
-                {/* ✅ PROJECT FIELD FIXED */}
-                <Field label="Project" error={errors.project_id?.message}>
-                  <select
-                    className="w-full disabled:bg-gray-100"
-                    disabled={!products.length}
-                    {...register("project_id", {
-                      required:
-                        "String must contain at least 1 character(s)",
-                      validate: (v) =>
-                        v && v.trim() !== "" ||
-                        "String must contain at least 1 character(s)",
-                    })}
-                    defaultValue=""
-                  >
-                    <option value="">Select Project</option>
+    <Field label="Expected Value">
+      <input
+        type="number"
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("expected_value")}
+      />
+    </Field>
 
-                    {products.map((p) => (
-                      <option key={p.project_id} value={p.project_id}>
-                        {p.name} (₹ {p.price})
-                      </option>
-                    ))}
-                  </select>
+    <Field label="Project" error={errors.project_id?.message}>
+      <select
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        disabled={!products.length}
+        {...register("project_id")}
+        defaultValue=""
+      >
+        <option value="">Select Project</option>
 
-                  {products.length === 0 && (
-                    <div className="text-xs text-amber-600 mt-1">
-                      No projects available
-                    </div>
-                  )}
-                </Field>
+        {products.map((p) => (
+          <option key={p.project_id} value={p.project_id}>
+            {p.name} (₹ {p.price})
+          </option>
+        ))}
+      </select>
 
-                <Field label="Status">
-                  <select className="w-full" {...register("status")}>
-                    <option value="OPEN">OPEN</option>
-                    <option value="WIP">WIP</option>
-                    <option value="CLOSED">CLOSED</option>
-                    <option value="LOST">LOST</option>
-                  </select>
-                </Field>
+      {products.length === 0 && (
+        <div className="text-xs text-amber-600 mt-1">
+          No projects available
+        </div>
+      )}
+    </Field>
 
-                <Field label="Temperature">
-                  <select className="w-full" {...register("temperature")}>
-                    <option value="COLD">COLD</option>
-                    <option value="WARM">WARM</option>
-                    <option value="HOT">HOT</option>
-                  </select>
-                </Field>
+    <Field label="Status">
+      <select
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("status")}
+      >
+        <option value="OPEN">OPEN</option>
+        <option value="WIP">WIP</option>
+        <option value="CLOSED">CLOSED</option>
+        <option value="LOST">LOST</option>
+      </select>
+    </Field>
 
-                <Field label="Pipeline Stage">
-                  <select className="w-full" {...register("pipeline_stage")}>
-                    <option value="NEW">NEW</option>
-                    <option value="CONTACTED">CONTACTED</option>
-                    <option value="DEMO">DEMO</option>
-                    <option value="PROPOSAL">PROPOSAL</option>
-                    <option value="NEGOTIATION">NEGOTIATION</option>
-                    <option value="WON">WON</option>
-                    <option value="LOST">LOST</option>
-                  </select>
-                </Field>
+    <Field label="Temperature">
+      <select
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("temperature")}
+      >
+        <option value="COLD">COLD</option>
+        <option value="WARM">WARM</option>
+        <option value="HOT">HOT</option>
+      </select>
+    </Field>
 
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium">
-                    Purpose / Requirement
-                  </label>
-                  <textarea
-                    className="mt-1 w-full"
-                    rows="3"
-                    {...register("purpose")}
-                  />
-                </div>
+    <Field label="Pipeline Stage">
+      <select
+        className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("pipeline_stage")}
+      >
+        <option value="NEW">NEW</option>
+        <option value="CONTACTED">CONTACTED</option>
+        <option value="DEMO">DEMO</option>
+        <option value="PROPOSAL">PROPOSAL</option>
+        <option value="NEGOTIATION">NEGOTIATION</option>
+        <option value="WON">WON</option>
+        <option value="LOST">LOST</option>
+      </select>
+    </Field>
 
-                <div className="md:col-span-2 flex justify-end gap-2 mt-2">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-3 py-2 rounded-lg border text-sm"
-                  >
-                    Cancel
-                  </button>
+    <div className="md:col-span-2">
+      <label className="text-sm font-semibold text-slate-700">
+        Purpose / Requirement
+      </label>
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm disabled:opacity-60"
-                  >
-                    {isSubmitting ? "Creating…" : "Create"}
-                  </button>
-                </div>
-              </form>
-            </Dialog.Panel>
+      <textarea
+        rows="4"
+        className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        {...register("purpose")}
+      />
+    </div>
+
+    {/* Footer */}
+    <div className="md:col-span-2 flex justify-end gap-3 pt-2">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 shadow-sm transition disabled:opacity-60"
+      >
+        {isSubmitting ? "Creating..." : "Create Lead"}
+      </button>
+    </div>
+  </form>
+</Dialog.Panel>
           </Transition.Child>
         </div>
       </Dialog>

@@ -239,7 +239,7 @@ function CreateInvoice({ onClose, onCreated }) {
           <div>
             <div className="text-xs text-slate-500">Client Name</div>
             <input
-              className="mt-1 w-full"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
               value={form.client_name}
               onChange={(e) =>
                 setForm((f) => ({ ...f, client_name: e.target.value }))
@@ -249,7 +249,7 @@ function CreateInvoice({ onClose, onCreated }) {
           <div>
             <div className="text-xs text-slate-500">Client Company</div>
             <input
-              className="mt-1 w-full"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
               value={form.client_company}
               onChange={(e) =>
                 setForm((f) => ({ ...f, client_company: e.target.value }))
@@ -259,7 +259,7 @@ function CreateInvoice({ onClose, onCreated }) {
           <div className="md:col-span-2">
             <div className="text-xs text-slate-500">Client Address</div>
             <textarea
-              className="mt-1 w-full"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
               rows="2"
               value={form.client_address}
               onChange={(e) =>
@@ -328,7 +328,7 @@ function CreateInvoice({ onClose, onCreated }) {
         <div className="mt-4">
           <div className="text-xs text-slate-500">Notes</div>
           <textarea
-            className="mt-1 w-full"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
             rows="3"
             value={form.notes}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}

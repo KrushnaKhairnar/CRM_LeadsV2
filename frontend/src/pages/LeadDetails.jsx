@@ -1,25 +1,12 @@
-import React, { useMemo, useState, Fragment, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LeadsAPI, UsersAPI } from "../api/endpoints";
-import Badge from "../components/Badge";
-import { useAuthStore } from "../auth/store";
-import { toast } from "sonner";
 import { Dialog, Transition } from "@headlessui/react";
-import {
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import DatePicker from "react-datepicker";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
-import { CalendarDays } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { LeadsAPI, UsersAPI } from "../api/endpoints";
+import { useAuthStore } from "../auth/store";
+import Badge from "../components/Badge";
 
 export default function LeadDetails() {
   const { id } = useParams();
@@ -164,25 +151,20 @@ export default function LeadDetails() {
   };
 
   function DateTimePickerField({ value, onSave }) {
-  const [selectedDate, setSelectedDate] = useState(
-    value || ""
-  );
+    const [selectedDate, setSelectedDate] = useState(value || "");
 
-  return (
-    <div className="relative w-full">
-  
-      <input
-        type="datetime-local"
-        className="w-full border rounded-lg px-3 py-2 pr-10"
-        value={selectedDate}
-        onChange={(e) =>
-          setSelectedDate(e.target.value)
-        }
-        onBlur={() => onSave(selectedDate)}
-      />
-    </div>
-  );
-}
+    return (
+      <div className="relative w-full">
+        <input
+          type="datetime-local"
+          className="w-full border rounded-lg px-3 py-2 pr-10"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          onBlur={() => onSave(selectedDate)}
+        />
+      </div>
+    );
+  }
 
   const fuSeries = useMemo(() => {
     const arr = (followups || []).map((f) => ({
@@ -198,6 +180,22 @@ export default function LeadDetails() {
     for (const a of arr) by[a.date] = (by[a.date] || 0) + 1;
     return Object.keys(by).map((k) => ({ date: k, count: by[k] }));
   }, [followups]);
+
+  const [nextFollowup, setNextFollowup] = useState("");
+
+  useEffect(() => {
+    if (lead?.next_followup_at) {
+      const formatted = new Date(
+        lead.next_followup_at.endsWith("Z")
+          ? lead.next_followup_at
+          : lead.next_followup_at + "Z",
+      )
+        .toISOString()
+        .slice(0, 16);
+
+      setNextFollowup(formatted);
+    }
+  }, [lead?.next_followup_at]);
 
   if (isLoading) return <div>Loading…</div>;
   if (!lead) return <div>Not found</div>;
@@ -322,180 +320,166 @@ export default function LeadDetails() {
         </Panel>
 
         <Panel title="Update Fields">
-  <div className="grid grid-cols-2 gap-3 text-sm">
-    <Field label="Status">
-      <select
-        disabled={isAdmin}
-        className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
-        value={lead.status}
-        onChange={(e) =>
-          patchMutation.mutate({ status: e.target.value })
-        }
-      >
-        <option value="OPEN">OPEN</option>
-        <option value="WIP">WIP</option>
-        <option value="CLOSED">CLOSED</option>
-        <option value="LOST">LOST</option>
-      </select>
-    </Field>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <Field label="Status">
+              <select
+                disabled={isAdmin}
+                className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
+                value={lead.status}
+                onChange={(e) =>
+                  patchMutation.mutate({ status: e.target.value })
+                }
+              >
+                <option value="OPEN">OPEN</option>
+                <option value="WIP">WIP</option>
+                <option value="CLOSED">CLOSED</option>
+                <option value="LOST">LOST</option>
+              </select>
+            </Field>
 
-    <Field label="Temperature">
-      <select
-        disabled={isAdmin}
-        className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
-        value={lead.temperature}
-        onChange={(e) =>
-          patchMutation.mutate({ temperature: e.target.value })
-        }
-      >
-        <option value="COLD">COLD</option>
-        <option value="WARM">WARM</option>
-        <option value="HOT">HOT</option>
-      </select>
-    </Field>
+            <Field label="Temperature">
+              <select
+                disabled={isAdmin}
+                className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
+                value={lead.temperature}
+                onChange={(e) =>
+                  patchMutation.mutate({ temperature: e.target.value })
+                }
+              >
+                <option value="COLD">COLD</option>
+                <option value="WARM">WARM</option>
+                <option value="HOT">HOT</option>
+              </select>
+            </Field>
 
-    <Field label="Stage">
-      <select
-        disabled={isAdmin}
-        className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
-        value={lead.pipeline_stage || ""}
-        onChange={(e) =>
-          patchMutation.mutate({
-            pipeline_stage: e.target.value || null,
-          })
-        }
-      >
-        <option value="">—</option>
-        <option value="NEW">NEW</option>
-        <option value="CONTACTED">CONTACTED</option>
-        <option value="DEMO">DEMO</option>
-        <option value="PROPOSAL">PROPOSAL</option>
-        <option value="NEGOTIATION">NEGOTIATION</option>
-        <option value="WON">WON</option>
-        <option value="LOST">LOST</option>
-      </select>
-    </Field>
+            <Field label="Stage">
+              <select
+                disabled={isAdmin}
+                className="border rounded-lg px-3 py-2 w-full disabled:bg-slate-100 disabled:cursor-not-allowed"
+                value={lead.pipeline_stage || ""}
+                onChange={(e) =>
+                  patchMutation.mutate({
+                    pipeline_stage: e.target.value || null,
+                  })
+                }
+              >
+                <option value="">—</option>
+                <option value="NEW">NEW</option>
+                <option value="CONTACTED">CONTACTED</option>
+                <option value="DEMO">DEMO</option>
+                <option value="PROPOSAL">PROPOSAL</option>
+                <option value="NEGOTIATION">NEGOTIATION</option>
+                <option value="WON">WON</option>
+                <option value="LOST">LOST</option>
+              </select>
+            </Field>
 
-    <Field label="Next Followup">
-      <DateTimePickerField
-        disabled={isAdmin}
-        value={
-          lead.next_followup_at
-            ? new Date(
-                lead.next_followup_at.endsWith("Z")
-                  ? lead.next_followup_at
-                  : lead.next_followup_at + "Z",
-              )
-                .toISOString()
-                .slice(0, 16)
-            : ""
-        }
-        onSave={(date) =>
-          !isAdmin &&
-          patchMutation.mutate({
-            next_followup_at: date
-              ? new Date(date).toISOString()
-              : null,
-          })
-        }
-      />
-    </Field>
+            <Field label="Next Followup">
+              <DateTimePickerField
+                value={nextFollowup}
+                onSave={(date) => {
+                  if (isAdmin) return;
 
-    {isManager && (
-      <div className="col-span-2">
-        <Field label="Assign to">
-          <select
-            className="border rounded-lg px-3 py-2 w-full"
-            value={lead.assigned_to || ""}
-            onChange={(e) =>
-              assignMutation.mutate({
-                assigned_to: e.target.value || null,
-              })
-            }
-          >
-            <option value="">UNASSIGNED</option>
-            {(salesUsers || []).map((u) => (
-              <option key={u.user_id} value={u.user_id}>
-                {u.username}
-              </option>
-            ))}
-          </select>
-        </Field>
+                  setNextFollowup(date || "");
 
-        {lead.assigned_to && (
-          <div className="mt-2">
-            <button
-              onClick={() =>
-                assignMutation.mutate({ assigned_to: null })
-              }
-              className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
-            >
-              Unassign
-            </button>
+                  patchMutation.mutate({
+                    next_followup_at: date || null,
+                  });
+                }}
+              />
+            </Field>
+
+            {isManager && (
+              <div className="col-span-2">
+                <Field label="Assign to">
+                  <select
+                    className="border rounded-lg px-3 py-2 w-full"
+                    value={lead.assigned_to || ""}
+                    onChange={(e) =>
+                      assignMutation.mutate({
+                        assigned_to: e.target.value || null,
+                      })
+                    }
+                  >
+                    <option value="">UNASSIGNED</option>
+                    {(salesUsers || []).map((u) => (
+                      <option key={u.user_id} value={u.user_id}>
+                        {u.username}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                {lead.assigned_to && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() =>
+                        assignMutation.mutate({ assigned_to: null })
+                      }
+                      className="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50"
+                    >
+                      Unassign
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
+
+          {!isManager && !isAdmin && (
+            <div className="text-xs text-slate-500 mt-3">
+              Sales cannot change assignment fields.
+            </div>
+          )}
+
+          {isAdmin && (
+            <div className="text-xs text-slate-500 mt-2">
+              Admin cannot update leads.
+            </div>
+          )}
+        </Panel>
+
+        <Panel title="Purpose / Notes">
+          <div className="text-sm text-slate-700 whitespace-pre-wrap">
+            {lead.purpose || "—"}
+          </div>
+
+          {!isAdmin ? (
+            <Notes
+              lead={lead}
+              onAdd={async (text) => {
+                try {
+                  await LeadsAPI.addNote(id, { text });
+                  toast.success("Note added");
+                  qc.invalidateQueries({ queryKey: ["lead", id] });
+                } catch {
+                  toast.error("Add note failed");
+                }
+              }}
+              nameOf={nameOf}
+            />
+          ) : (
+            <div className="text-xs text-slate-500 mt-3">
+              Admin cannot update leads.
+            </div>
+          )}
+        </Panel>
       </div>
-    )}
-  </div>
 
-  {!isManager && !isAdmin && (
-    <div className="text-xs text-slate-500 mt-3">
-      Sales cannot change assignment fields.
-    </div>
-  )}
-
-  {isAdmin && (
-    <div className="text-xs text-slate-500 mt-2">
-      Admin cannot update leads.
-    </div>
-  )}
-</Panel>
-
-<Panel title="Purpose / Notes">
-  <div className="text-sm text-slate-700 whitespace-pre-wrap">
-    {lead.purpose || "—"}
-  </div>
-
-  {!isAdmin ? (
-    <Notes
-      lead={lead}
-      onAdd={async (text) => {
-        try {
-          await LeadsAPI.addNote(id, { text });
-          toast.success("Note added");
-          qc.invalidateQueries({ queryKey: ["lead", id] });
-        } catch {
-          toast.error("Add note failed");
-        }
-      }}
-      nameOf={nameOf}
-    />
-  ) : (
-    <div className="text-xs text-slate-500 mt-3">
-      Admin cannot update leads.
-    </div>
-  )}
-</Panel>
-</div>
-
-<div className="grid lg:grid-cols-2 gap-4">
-  <Panel title="Next Actions & Probability">
-    {!isAdmin ? (
-      <NextActions
-        lead={lead}
-        onChange={(next) =>
-          patchMutation.mutate({ next_actions: next })
-        }
-        onProb={(p) =>
-          patchMutation.mutate({ win_probability: p })
-        }
-      />
-    ) : (
-      <div className="text-xs text-slate-500">
-        Admin cannot update leads.
-      </div>
-    )}
-  </Panel>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Panel title="Next Actions & Probability">
+          {!isAdmin ? (
+            <NextActions
+              lead={lead}
+              onChange={(next) => patchMutation.mutate({ next_actions: next })}
+              onProb={(p) => patchMutation.mutate({ win_probability: p })}
+            />
+          ) : (
+            <div className="text-xs text-slate-500">
+              Admin cannot update leads.
+            </div>
+          )}
+        </Panel>
         <Panel title={`Followups (${(followups || []).length})`}>
           <div className="space-y-3">
             {(followups || []).map((f) => (
@@ -546,56 +530,65 @@ export default function LeadDetails() {
         </Panel>
 
         <Panel title="Audit Log">
+          {" "}
           <div className="space-y-5">
+            {" "}
             {(audit || []).map((a) => (
               <div
                 key={a._id}
-                className="group bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
+                className="group bg-white border border-slate-200 rounded-2xl px-3 py-2 shadow-sm hover:shadow-md transition"
               >
-                {/* Header */}
+                {" "}
+                {/* Header */}{" "}
                 <div className="flex items-start justify-between">
+                  {" "}
                   <div className="flex items-start gap-3">
-                    <div className="mt-1.5 w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-blue-100" />
-
+                    {" "}
+                    <div className="mt-1.5 w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-blue-100" />{" "}
                     <div>
+                      {" "}
                       <div className="text-sm font-semibold text-slate-900">
-                        {a.action}
-                      </div>
+                        {" "}
+                        {a.action}{" "}
+                      </div>{" "}
                       <div className="text-xs text-slate-500 mt-1">
+                        {" "}
                         by{" "}
                         <span className="font-medium text-slate-700">
-                          {nameOf(a.actor_id)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
+                          {" "}
+                          {nameOf(a.actor_id)}{" "}
+                        </span>{" "}
+                      </div>{" "}
+                    </div>{" "}
+                  </div>{" "}
                   <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
+                    {" "}
                     {new Date().toLocaleDateString("en-GB")}{" "}
                     {new Date().toLocaleTimeString("en-GB", {
                       hour: "2-digit",
                       minute: "2-digit",
                       hour12: true,
-                    })}
-                  </div>
-                </div>
-
-                {/* Diff */}
-                <AuditDiff before={a.before || {}} after={a.after || {}} />
+                    })}{" "}
+                  </div>{" "}
+                </div>{" "}
+                {/* Diff */}{" "}
+                <AuditDiff before={a.before || {}} after={a.after || {}} />{" "}
               </div>
-            ))}
-
+            ))}{" "}
             {(audit || []).length === 0 && (
               <div className="py-14 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+                {" "}
                 <div className="text-sm font-medium text-slate-600">
-                  No audit activity
-                </div>
+                  {" "}
+                  No audit activity{" "}
+                </div>{" "}
                 <div className="text-xs text-slate-400 mt-1">
-                  Changes will appear here
-                </div>
+                  {" "}
+                  Changes will appear here{" "}
+                </div>{" "}
               </div>
-            )}
-          </div>
+            )}{" "}
+          </div>{" "}
         </Panel>
       </div>
 
@@ -798,10 +791,7 @@ function AuditDiff({ before, after }) {
     ];
 
     if (dateFields.includes(key)) {
-      const dateValue =
-        typeof value === "string" && !value.endsWith("Z") ? value + "Z" : value;
-
-      return new Date(dateValue)
+      return new Date(value)
         .toLocaleString("en-GB", {
           day: "2-digit",
           month: "2-digit",
@@ -821,7 +811,7 @@ function AuditDiff({ before, after }) {
       {rows.map((r, i) => (
         <div
           key={i}
-          className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-4 p-4"
+          className="grid grid-cols-2  gap-4 px-2 py-1.5"
         >
           {/* Field */}
           <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
@@ -848,13 +838,13 @@ function DiffBox({ label, value, type }) {
   const isBefore = type === "before";
 
   return (
-    <div className="flex items-start gap-2">
+    <div className="flex items-start gap-2 ">
       <span className="text-[11px] text-slate-400 w-10 mt-1 shrink-0">
         {label}
       </span>
 
       <div
-        className={`flex-1 px-3 py-2 rounded-lg border text-xs leading-relaxed ${
+        className={`px-3 py-0.5 rounded-lg border text-xs leading-relaxed ${
           isBefore
             ? "bg-red-50 border-red-100 text-red-700"
             : "bg-emerald-50 border-emerald-100 text-emerald-700"
@@ -865,6 +855,7 @@ function DiffBox({ label, value, type }) {
     </div>
   );
 }
+
 function ProductStatusDiff({ before, after }) {
   const beforeItems = Array.isArray(before) ? before : [];
   const afterItems = Array.isArray(after) ? after : [];
@@ -972,6 +963,7 @@ function fmt(v) {
   }
   return str;
 }
+
 function Panel({ title, children }) {
   return (
     <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-2xl p-4 shadow-soft transition hover:shadow-hover">
@@ -1135,7 +1127,7 @@ function FollowupModal({
 
                   <input
                     type="datetime-local"
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     value={doneAt}
                     onChange={(e) => setDoneAt(e.target.value)}
                   />
@@ -1145,7 +1137,7 @@ function FollowupModal({
                 <div>
                   <div className="text-xs text-slate-500">Outcome</div>
                   <select
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     value={outcome}
                     onChange={(e) => setOutcome(e.target.value)}
                   >
@@ -1162,7 +1154,7 @@ function FollowupModal({
                     Product (optional)
                   </div>
                   <select
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     value={selectedProductId || ""}
                     onChange={(e) => setSelectedProductId(e.target.value)}
                   >
@@ -1179,7 +1171,7 @@ function FollowupModal({
                 <div className="col-span-2">
                   <div className="text-xs text-slate-500">Note</div>
                   <textarea
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     rows={4}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
@@ -1203,7 +1195,7 @@ function FollowupModal({
                   </div>
                   <input
                     type="datetime-local"
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     value={nextAt || ""}
                     onChange={(e) => setNextAt(e.target.value)}
                   />
@@ -1290,7 +1282,7 @@ function ProductModal({ open, onClose, onSubmit }) {
                   <div className="text-xs text-slate-500">Name</div>
                   <input
                     type="text"
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
@@ -1298,7 +1290,7 @@ function ProductModal({ open, onClose, onSubmit }) {
                 <div>
                   <div className="text-xs text-slate-500">Description</div>
                   <textarea
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     rows="3"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -1309,7 +1301,7 @@ function ProductModal({ open, onClose, onSubmit }) {
                   <input
                     type="number"
                     step="0.01"
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                   />
@@ -1318,7 +1310,7 @@ function ProductModal({ open, onClose, onSubmit }) {
                   <div className="text-xs text-slate-500">Plan</div>
                   <input
                     type="text"
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     value={plan}
                     onChange={(e) => setPlan(e.target.value)}
                   />
@@ -1326,7 +1318,7 @@ function ProductModal({ open, onClose, onSubmit }) {
                 <div>
                   <div className="text-xs text-slate-500">Status</div>
                   <select
-                    className="mt-1 w-full"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                   >

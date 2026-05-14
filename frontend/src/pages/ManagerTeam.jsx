@@ -1,33 +1,72 @@
-import React, { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { AnalyticsAPI, UsersAPI } from '../api/endpoints'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts'
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { AnalyticsAPI, UsersAPI } from "../api/endpoints";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  AreaChart,
+  Area,
+} from "recharts";
 
 export default function ManagerTeam() {
-  const [days, setDays] = useState(30)
-  const [sales, setSales] = useState('')
-  const { data } = useQuery({ queryKey: ['team', days, sales], queryFn: () => AnalyticsAPI.team({ days, sales_user_id: sales || undefined }) })
-  const { data: users } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales() })
-  const series = data?.series || []
-  const nameOf = (id) => (users || []).find(u => u.user_id === id)?.username || (id ? id.slice(-6) : '—')
-  const byPerson = Object.entries(data?.by_person || {}).map(([k, v]) => ({ id: k, name: nameOf(k), ...v }))
+  const [days, setDays] = useState(30);
+  const [sales, setSales] = useState("");
+  const { data } = useQuery({
+    queryKey: ["team", days, sales],
+    queryFn: () =>
+      AnalyticsAPI.team({ days, sales_user_id: sales || undefined }),
+  });
+  const { data: users } = useQuery({
+    queryKey: ["sales-users"],
+    queryFn: () => UsersAPI.listSales(),
+  });
+  const series = data?.series || [];
+  const nameOf = (id) =>
+    (users || []).find((u) => u.user_id === id)?.username ||
+    (id ? id.slice(-6) : "—");
+  const byPerson = Object.entries(data?.by_person || {}).map(([k, v]) => ({
+    id: k,
+    name: nameOf(k),
+    ...v,
+  }));
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-2xl font-semibold tracking-tight">Team Performance</div>
-          <div className="text-sm text-slate-500">Track individual and overall performance</div>
+          <div className="text-2xl font-semibold tracking-tight">
+            Team Performance
+          </div>
+          <div className="text-sm text-slate-500">
+            Track individual and overall performance
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <select className="text-sm" value={days} onChange={e => setDays(Number(e.target.value))}>
+          <select
+            className="text-sm"
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+          >
             <option value={7}>7d</option>
             <option value={15}>15d</option>
             <option value={30}>30d</option>
             <option value={90}>90d</option>
           </select>
-          <select className="text-sm" value={sales} onChange={e => setSales(e.target.value)}>
+          <select
+            className="text-sm"
+            value={sales}
+            onChange={(e) => setSales(e.target.value)}
+          >
             <option value="">All Sales</option>
-            {(users || []).map(u => <option key={u.user_id} value={u.user_id}>{u.username}</option>)}
+            {(users || []).map((u) => (
+              <option key={u.user_id} value={u.user_id}>
+                {u.username}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -39,26 +78,92 @@ export default function ManagerTeam() {
               <AreaChart data={series} margin={{ left: 10, right: 10 }}>
                 <defs>
                   <linearGradient id="gLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity={0.35} />
+                    <stop
+                      offset="100%"
+                      stopColor="#818cf8"
+                      stopOpacity={0.04}
+                    />
                   </linearGradient>
+
                   <linearGradient id="gWon" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="#2dd4bf" stopOpacity={0.35} />
+                    <stop
+                      offset="100%"
+                      stopColor="#2dd4bf"
+                      stopOpacity={0.04}
+                    />
                   </linearGradient>
+
                   <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.35} />
+                    <stop
+                      offset="100%"
+                      stopColor="#fbbf24"
+                      stopOpacity={0.04}
+                    />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="date" />
-                <YAxis yAxisId="left" allowDecimals={false} />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
+
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                />
+
+                <YAxis
+                  yAxisId="left"
+                  allowDecimals={false}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                />
+
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                />
+
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "14px",
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 6px 20px rgba(15,23,42,0.08)",
+                  }}
+                />
+
                 <Legend />
-                <Area yAxisId="left" type="monotone" dataKey="leads_created" stroke="#0ea5e9" fill="url(#gLeads)" strokeWidth={2} />
-                <Area yAxisId="left" type="monotone" dataKey="won" stroke="#22c55e" fill="url(#gWon)" strokeWidth={2} />
-                <Area yAxisId="right" type="monotone" dataKey="revenue" stroke="#f59e0b" fill="url(#gRev)" strokeWidth={2} />
+
+                <Area
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="leads_created"
+                  stroke="#6366f1"
+                  fill="url(#gLeads)"
+                  strokeWidth={3}
+                />
+
+                <Area
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="won"
+                  stroke="#14b8a6"
+                  fill="url(#gWon)"
+                  strokeWidth={3}
+                />
+
+                <Area
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#f59e0b"
+                  fill="url(#gRev)"
+                  strokeWidth={3}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -75,22 +180,30 @@ export default function ManagerTeam() {
                 </tr>
               </thead>
               <tbody>
-                {byPerson.map(p => (
+                {byPerson.map((p) => (
                   <tr key={p.id} className="border-t">
                     <td className="py-2">{p.name}</td>
                     <td className="text-right">{p.leads}</td>
                     <td className="text-right">{p.won}</td>
-                    <td className="text-right">{Math.round(p.revenue).toLocaleString('en-GB')}</td>
+                    <td className="text-right">
+                      {Math.round(p.revenue).toLocaleString("en-GB")}
+                    </td>
                   </tr>
                 ))}
-                {byPerson.length === 0 && <tr><td className="py-4 text-slate-500" colSpan="4">Select “All Sales” to see breakdown.</td></tr>}
+                {byPerson.length === 0 && (
+                  <tr>
+                    <td className="py-4 text-slate-500" colSpan="4">
+                      Select “All Sales” to see breakdown.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </Panel>
       </div>
     </div>
-  )
+  );
 }
 
 function Panel({ title, children }) {
@@ -99,5 +212,5 @@ function Panel({ title, children }) {
       <div className="font-medium">{title}</div>
       <div className="mt-3">{children}</div>
     </div>
-  )
+  );
 }

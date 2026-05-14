@@ -45,15 +45,19 @@ export default function Profile() {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <div className="text-sm font-medium">Full Name</div>
-              <input className="mt-1 w-full" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} />
+              <input className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} />
             </div>
             <div>
               <div className="text-sm font-medium">Email</div>
-              <input type="email" className="mt-1 w-full" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-            </div>
+<input
+  className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+  type="email"
+  value={form.email}
+  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+/>            </div>
             <div>
               <div className="text-sm font-medium">Phone</div>
-              <input className="mt-1 w-full" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+              <input className="mt-1 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 hover:border-slate-300" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
             </div>
           </div>
           <div className="flex justify-end mt-4">
