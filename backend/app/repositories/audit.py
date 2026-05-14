@@ -21,5 +21,5 @@ class AuditRepository:
         await self.db.audit_logs.insert_one(doc)
 
     async def list_by_lead(self, lead_id: str) -> List[dict]:
-        cur = self.db.audit_logs.find({"lead_id": lead_id}).sort("created_at", -1).limit(100)
+        cur = self.db.audit_logs.find({"lead_id": lead_id},{"_id":0, "after.manager_id": 0, "after.assigned_by": 0}).sort("created_at", -1).limit(100)
         return [d async for d in cur]
