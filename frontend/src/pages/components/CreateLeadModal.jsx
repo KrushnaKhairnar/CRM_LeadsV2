@@ -14,7 +14,7 @@ const schema = z.object({
   source: z.string().optional().or(z.literal("")),
   project_id: z.string().min(1, "Project is required"),
   purpose: z.string().optional().or(z.literal("")),
-  status: z.enum(["OPEN", "WIP", "CLOSED", "LOST"]).default("OPEN"),
+  status: z.enum(["WIP", "CLOSED", "LOST"]).default("WIP"),
   temperature: z.enum(["COLD", "WARM", "HOT"]).default("COLD"),
   expected_value: z.coerce.number().min(0).default(0),
   pipeline_stage: z
@@ -48,7 +48,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, initial }) {
       company: "",
       source: "",
       purpose: "",
-      status: "OPEN",
+      status: "WIP",
       temperature: "COLD",
       expected_value: 0,
       pipeline_stage: "NEW",
@@ -85,7 +85,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, initial }) {
       company: "",
       source: "",
       purpose: "",
-      status: "OPEN",
+      status: "WIP",
       temperature: "COLD",
       expected_value: 0,
       pipeline_stage: init.pipeline_stage || "NEW",
@@ -242,7 +242,6 @@ export default function CreateLeadModal({ open, onClose, onCreated, initial }) {
         className="mt-1 w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         {...register("status")}
       >
-        <option value="OPEN">OPEN</option>
         <option value="WIP">WIP</option>
         <option value="CLOSED">CLOSED</option>
         <option value="LOST">LOST</option>

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, File, UploadFile,Form
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import csv, io
 
 from app.db.mongo import get_db
@@ -208,14 +208,37 @@ async def get_lead(
 ):
     # Get lead
     lead = await db.leads.find_one({"lead_id": lead_id})
-    
+
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
 
     ensure_can_view(user, lead)
 
-    # Convert UTC -> IST for next_followup_at
+    # -------------------------------
+    # Compute overdue badge
+    # Badge after 1 minute
+    # -------------------------------
+    nfa = lead.get("next_followup_at")
+
+    if nfa:
+
+        if nfa.tzinfo is None:
+            nfa = nfa.replace(tzinfo=timezone.utc)
+
+        now = datetime.now(timezone.utc)
+
+        overdue_time = nfa + timedelta(minutes=1)
+
+        lead["is_overdue"] = now > overdue_time
+
+    else:
+        lead["is_overdue"] = False
+
+    # -------------------------------
+    # Convert UTC -> IST
+    # -------------------------------
     if lead.get("next_followup_at"):
+
         utc_dt = lead["next_followup_at"]
 
         # Ensure datetime is timezone-aware
@@ -223,22 +246,29 @@ async def get_lead(
             utc_dt = utc_dt.replace(tzinfo=timezone.utc)
 
         # Convert to IST
-        ist_dt = utc_dt.astimezone(ZoneInfo("Asia/Kolkata"))
+        ist_dt = utc_dt.astimezone(
+            ZoneInfo("Asia/Kolkata")
+        )
 
-        # Optional: format as string
-        lead["next_followup_at"] = ist_dt.strftime("%Y-%m-%d %H:%M:%S")
+        # Format datetime
+        lead["next_followup_at"] = ist_dt.strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
 
-        # If you want ISO format instead, use:
-        # lead["next_followup_at"] = ist_dt.isoformat()
-
-    # Get project name using project_id
+    # -------------------------------
+    # Get project name
+    # -------------------------------
     if lead.get("project_id"):
+
         project = await db.products.find_one(
             {"project_id": lead["project_id"]},
             {"_id": 0, "name": 1}
         )
 
-        lead["project_name"] = project["name"] if project else None
+        lead["project_name"] = (
+            project["name"] if project else None
+        )
+
     else:
         lead["project_name"] = None
 

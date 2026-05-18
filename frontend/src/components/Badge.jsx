@@ -2,7 +2,6 @@ import React from 'react'
 import clsx from 'clsx'
 
 const map = {
-  OPEN: 'bg-blue-50 text-blue-700 ring-blue-100',
   WIP: 'bg-amber-50 text-amber-700 ring-amber-100',
   CLOSED: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
   LOST: 'bg-rose-50 text-rose-700 ring-rose-100',

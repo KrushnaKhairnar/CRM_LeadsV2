@@ -12,6 +12,7 @@ import {
   AreaChart,
   Area,
 } from "recharts";
+import { useAuthStore } from "../auth/store";
 
 export default function ManagerTeam() {
   const [days, setDays] = useState(30);
@@ -21,14 +22,30 @@ export default function ManagerTeam() {
     queryFn: () =>
       AnalyticsAPI.team({ days, sales_user_id: sales || undefined }),
   });
+  const { user } = useAuthStore();
   const { data: users } = useQuery({
     queryKey: ["sales-users"],
-    queryFn: () => UsersAPI.listSales(),
+    queryFn: () => UsersAPI.myTeam(),
   });
   const series = data?.series || [];
-  const nameOf = (id) =>
-    (users || []).find((u) => u.user_id === id)?.username ||
-    (id ? id.slice(-6) : "—");
+  const { data: salesUsers } = useQuery({
+    queryKey: ["sales-users"],
+    queryFn: () => UsersAPI.myTeam(),
+  });
+  const nameOf = (id) => {
+    const foundUser = (salesUsers || []).find((u) => u.user_id === id);
+
+    if (foundUser) {
+      return foundUser.username;
+    }
+
+    if (user?.user_id === id) {
+      return user.username;
+    }
+
+    return "—";
+  };
+
   const byPerson = Object.entries(data?.by_person || {}).map(([k, v]) => ({
     id: k,
     name: nameOf(k),
@@ -142,6 +159,7 @@ export default function ManagerTeam() {
                   yAxisId="left"
                   type="monotone"
                   dataKey="leads_created"
+                  name="Leads Created"
                   stroke="#6366f1"
                   fill="url(#gLeads)"
                   strokeWidth={3}
@@ -168,12 +186,12 @@ export default function ManagerTeam() {
             </ResponsiveContainer>
           </div>
         </Panel>
-        <Panel title="By Sales (overall)">
+        <Panel title="Overall">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-slate-500">
                 <tr>
-                  <th className="py-2 text-left">Sales</th>
+                  <th className="py-2 text-left">Username</th>
                   <th className="text-right">Leads</th>
                   <th className="text-right">Won</th>
                   <th className="text-right">Revenue</th>
@@ -181,7 +199,7 @@ export default function ManagerTeam() {
               </thead>
               <tbody>
                 {byPerson.map((p) => (
-                  <tr key={p.id} className="border-t">
+                  <tr key={p.user_id} className="border-t">
                     <td className="py-2">{p.name}</td>
                     <td className="text-right">{p.leads}</td>
                     <td className="text-right">{p.won}</td>

@@ -48,7 +48,7 @@ async def test_auth_and_lead_access():
             "company":"HiddenCo",
             "source":"facebook",
             "purpose":"hidden",
-            "status":"OPEN",
+            "status":"WIP",
             "temperature":"COLD",
             "tags":[],
             "expected_value":1,

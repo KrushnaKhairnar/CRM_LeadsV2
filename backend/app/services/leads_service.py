@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional, Tuple, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from fastapi import HTTPException, status
 from app.repositories.leads import LeadsRepository
@@ -19,11 +19,21 @@ class LeadsService:
 
     def _compute_overdue(self, lead: Dict[str, Any]) -> Dict[str, Any]:
         nfa = lead.get("next_followup_at")
-        if nfa:
-            now = datetime.now(timezone.utc)
-            lead["is_overdue"] = (nfa.replace(tzinfo=timezone.utc) if nfa.tzinfo is None else nfa) < now
-        else:
+
+        if not nfa:
             lead["is_overdue"] = False
+            return lead
+
+        if nfa.tzinfo is None:
+            nfa = nfa.replace(tzinfo=timezone.utc)
+
+            now = datetime.now(timezone.utc)
+
+    # same logic as followup_notifier.py
+            overdue_time = nfa + timedelta(minutes=1)
+
+        lead["is_overdue"] = now > overdue_time
+
         return lead
 
     async def create_lead(self, data: Dict[str, Any], actor: dict) -> Dict[str, Any]:

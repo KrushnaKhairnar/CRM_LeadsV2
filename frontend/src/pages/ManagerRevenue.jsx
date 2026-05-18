@@ -13,13 +13,14 @@ import {
   Pie,
   Cell,
 } from "recharts";
-
+import { useAuthStore } from "../auth/store";
 
 export default function ManagerRevenue() {
   const [days, setDays] = useState(30);
   const [sales, setSales] = useState("");
   const [status, setStatus] = useState("");
   const [currency, setCurrency] = useState("");
+  const { user } = useAuthStore();
   const { data } = useQuery({
     queryKey: ["rev-manager", days, sales, status, currency],
     queryFn: () =>
@@ -34,9 +35,19 @@ export default function ManagerRevenue() {
     queryKey: ["sales-users"],
     queryFn: () => UsersAPI.myTeam(),
   });
-  const nameOf = (id) =>
-    (salesUsers || []).find((u) => u.user_id === id)?.username ||
-    (id ? id : "—");
+  const nameOf = (id) => {
+    const foundUser = (salesUsers || []).find((u) => u.user_id === id);
+
+    if (foundUser) {
+      return foundUser.username;
+    }
+
+    if (user?.user_id === id) {
+      return user.username;
+    }
+
+    return "—";
+  };
 
   const bySalesData = Object.entries(data?.by_sales || {}).map(([k, v]) => ({
     name: nameOf(k),
@@ -171,48 +182,48 @@ export default function ManagerRevenue() {
             </ResponsiveContainer>
           </div>
         </Panel>
-        <Panel title="By Sales Person">
+        <Panel title="By Person">
           <div className="h-64">
             <ResponsiveContainer>
               <PieChart width={340} height={300}>
-  <Pie
-    data={bySalesData || []}
-    dataKey="value"
-    nameKey="name"
-    cx="50%"
-    cy="50%"
-    outerRadius={95}
-    paddingAngle={2}
-    stroke="#ffffff"
-    strokeWidth={3}
-    label={({ name }) => name}
-  >
-    {(bySalesData || []).map((entry, i) => (
-      <Cell
-        key={i}
-        fill={
-          [
-            "#6366f1",
-            "#0ea5e9",
-            "#14b8a6",
-            "#f59e0b",
-            "#ec4899",
-            "#8b5cf6",
-          ][i % 6]
-        }
-      />
-    ))}
-  </Pie>
+                <Pie
+                  data={bySalesData || []}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  paddingAngle={2}
+                  stroke="#ffffff"
+                  strokeWidth={3}
+                  label={({ name }) => name}
+                >
+                  {(bySalesData || []).map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={
+                        [
+                          "#6366f1",
+                          "#0ea5e9",
+                          "#14b8a6",
+                          "#f59e0b",
+                          "#ec4899",
+                          "#8b5cf6",
+                        ][i % 6]
+                      }
+                    />
+                  ))}
+                </Pie>
 
-  <Tooltip
-    contentStyle={{
-      borderRadius: "12px",
-      border: "1px solid #e2e8f0",
-      background: "#ffffff",
-      boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
-    }}
-  />
-</PieChart>
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0",
+                    background: "#ffffff",
+                    boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
+                  }}
+                />
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </Panel>

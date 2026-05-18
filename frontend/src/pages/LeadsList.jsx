@@ -8,12 +8,32 @@ import CreateLeadModal from "./components/CreateLeadModal.jsx";
 import { toast } from "sonner";
 import { Dialog, Transition } from "@headlessui/react";
 import Products from "./projects.jsx";
+const formatISTDate = (value) => {
+  if (!value) return "-";
+
+  try {
+    return new Date(
+      typeof value === "string" && !value.endsWith("Z")
+        ? value + "Z"
+        : value
+    ).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return "-";
+  }
+};
 
 export default function LeadsList() {
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const isManager = user?.role === "MANAGER";
-
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(Number(searchParams.get("page") || 1));
   const [q, setQ] = useState(searchParams.get("q") || "");
@@ -69,7 +89,7 @@ export default function LeadsList() {
     queryKey: ["leads", params],
     queryFn: () => LeadsAPI.list(params),
   });
-  // const { data: salesUsers } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales(), enabled: isManager })
+
   const { data: salesUsers } = useQuery({
     queryKey: ["my-team"],
     queryFn: () => UsersAPI.myTeam(),
@@ -172,7 +192,9 @@ export default function LeadsList() {
     <div className="space-y-4 animate-in-up">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-2xl font-extrabold tracking-tight text-slate-950">Leads</div>
+          <div className="text-2xl font-extrabold tracking-tight text-slate-950">
+            Leads
+          </div>
           <div className="text-sm text-slate-500 mt-1">
             Search, filter, and manage lead pipeline
           </div>
@@ -187,17 +209,14 @@ export default function LeadsList() {
               >
                 Download Sample Csv
               </button>
-              
+
               <button
                 onClick={() => setOpenCsvImport(true)}
                 className="crm-btn crm-btn-soft"
               >
                 Import CSV
               </button>
-              <button
-                onClick={exportCsv}
-                className="crm-btn crm-btn-soft"
-              >
+              <button onClick={exportCsv} className="crm-btn crm-btn-soft">
                 Export CSV
               </button>
             </>
@@ -231,7 +250,6 @@ export default function LeadsList() {
             className="text-sm"
           >
             <option value="">All Status</option>
-            <option value="OPEN">OPEN</option>
             <option value="WIP">WIP</option>
             <option value="CLOSED">CLOSED</option>
             <option value="LOST">LOST</option>
@@ -306,10 +324,7 @@ export default function LeadsList() {
             >
               Bulk Stage
             </button>
-            <button
-              onClick={clearSelected}
-              className="crm-btn crm-btn-soft"
-            >
+            <button onClick={clearSelected} className="crm-btn crm-btn-soft">
               Clear
             </button>
           </div>
@@ -386,16 +401,22 @@ export default function LeadsList() {
                       : "▼"
                     : ""}
                 </th>
-                <th
-                  className="px-4 cursor-pointer select-none"
-                  onClick={() => {
-                    setSortBy("assigned_to");
-                    setSortDir(sortBy === "assigned_to" ? -sortDir : 1);
-                  }}
-                >
-                  Assigned To{" "}
-                  {sortBy === "assigned_to" ? (sortDir === 1 ? "▲" : "▼") : ""}
-                </th>
+                {isManager && (
+                  <th
+                    className="px-4 cursor-pointer select-none"
+                    onClick={() => {
+                      setSortBy("assigned_to");
+                      setSortDir(sortBy === "assigned_to" ? -sortDir : 1);
+                    }}
+                  >
+                    Assigned To{" "}
+                    {sortBy === "assigned_to"
+                      ? sortDir === 1
+                        ? "▲"
+                        : "▼"
+                      : ""}
+                  </th>
+                )}
                 <th
                   className="px-4 text-right cursor-pointer select-none"
                   onClick={() => {
@@ -457,24 +478,17 @@ export default function LeadsList() {
                       <span className="text-slate-400">—</span>
                     )}
                   </td>
-                  <td className="px-4">
-                    {l.next_followup_at
-                      ? new Date(l.next_followup_at)
-                          .toLocaleString("en-GB", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })
-                          .replace(",", "")
-                      : "-"}
+                  <td className="px-4 py-3">
+                    {formatISTDate(l.next_followup_at)}
                   </td>
-                  <td className="px-4">
-                    {(salesUsers || []).find((u) => u.user_id === l.assigned_to)
-                      ?.username || <span className="text-slate-400">—</span>}
-                  </td>
+                  {isManager && (
+                    <td className="px-4">
+                      {(salesUsers || []).find(
+                        (u) => u.user_id === l.assigned_to,
+                      )?.username || <span className="text-slate-400">—</span>}
+                    </td>
+                  )}
+
                   <td className="px-4 text-right">
                     {(l.expected_value ?? 0).toLocaleString("en-GB")}
                   </td>
@@ -734,7 +748,7 @@ function BulkAssignModal({ open, onClose, users, onConfirm }) {
 }
 
 function BulkStatusModal({ open, onClose, onConfirm }) {
-  const [status, setStatus] = useState("OPEN");
+  const [status, setStatus] = useState("WIP");
   const confirm = () => onConfirm(status);
   return (
     <Transition appear show={open} as={Fragment}>
@@ -770,7 +784,6 @@ function BulkStatusModal({ open, onClose, onConfirm }) {
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
-                  <option value="OPEN">OPEN</option>
                   <option value="WIP">WIP</option>
                   <option value="CLOSED">CLOSED</option>
                   <option value="LOST">LOST</option>

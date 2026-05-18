@@ -23,7 +23,7 @@ export default function SavedViews() {
 
   const quick = async (type) => {
     if (type === 'my-overdue') {
-      await ViewsAPI.create({ name: 'My Overdue', params: { status: 'OPEN', q: '', pipeline_stage: '', temperature: '', /* next_followup_at<now handled by backend filters later if added */ } })
+      await ViewsAPI.create({ name: 'My Overdue', params: { status: 'WIP', q: '', pipeline_stage: '', temperature: '', /* next_followup_at<now handled by backend filters later if added */ } })
     } else if (type === 'hot-leads') {
       await ViewsAPI.create({ name: 'Hot Leads', params: { temperature: 'HOT' } })
     } else if (type === 'new-this-week') {

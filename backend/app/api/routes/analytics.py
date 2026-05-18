@@ -71,7 +71,7 @@ async def manager_analytics(
 
     total = len(leads)
 
-    by_status = Counter([l.get("status", "OPEN") for l in leads])
+    by_status = Counter([l.get("status", "WIP") for l in leads])
     by_temp = Counter([l.get("temperature", "COLD") for l in leads])
     by_sales = Counter([l.get("assigned_to") or "UNASSIGNED" for l in leads])
 
@@ -191,7 +191,7 @@ async def revenue_manager(
     # Get this manager + his sales team ids
     team_ids = [user["user_id"]]
     sales_users = await db.users.find(
-        {"manager_id": user["user_id"]}
+        {"created_by": user["user_id"]}
     ).to_list(None)
     team_ids.extend([u["user_id"] for u in sales_users])
 
@@ -234,7 +234,7 @@ async def revenue_manager(
         by_sales[s] = by_sales.get(s, 0.0) + float(inv.get("total", 0))
     # Lead-based revenue (fallback/augment):
     # - won_from_leads: sum of expected_value for WON or CLOSED leads updated in period
-    # - pipeline_open: sum of expected_value for OPEN/WIP leads (pipeline) created or updated in period
+    # - pipeline_open: sum of expected_value for WIP leads (pipeline) created or updated in period
     lead_q: dict = {
         "$or": [{"updated_at": {"$gte": start_naive}}, {"created_at": {"$gte": start_naive}}],
         "assigned_to": {"$in": team_ids}
@@ -248,7 +248,7 @@ async def revenue_manager(
         except: 
             return 0.0
     won_from_leads = sum(ev(l.get("expected_value")) for l in leads if (l.get("pipeline_stage")=="WON" or l.get("status")=="CLOSED"))
-    pipeline_open = sum(ev(l.get("expected_value")) for l in leads if l.get("status") in ("OPEN","WIP"))
+    pipeline_open = sum(ev(l.get("expected_value")) for l in leads if l.get("status") in "WIP")
     series = [{"date": k, "total": round(v,2)} for k,v in sorted(buckets.items())]
     return {
         "total_all": round(total_all,2),
@@ -268,84 +268,218 @@ async def team_performance(
     days: int = Query(30, ge=1, le=365),
     sales_user_id: str | None = None,
 ):
-   
+
     start, now = _range(days)
     start_naive = start.replace(tzinfo=None)
-    
-    lead_q = {"created_at": {"$gte": start_naive}}
-    inv_q = {"created_at": {"$gte": start_naive}}
 
-    # Role-based data scoping
-    if user["role"] not in (Roles.MANAGER, Roles.ADMIN):
-        # Sales users see their own data
+    lead_q = {
+        "created_at": {"$gte": start_naive}
+    }
+
+    inv_q = {
+        "created_at": {"$gte": start_naive}
+    }
+
+    if user["role"] == Roles.SALES:
+
         uid = user["user_id"]
-        lead_q["$or"] = [{"assigned_to": uid}, {"created_by": uid}]
+
+        lead_q["$or"] = [
+            {"assigned_to": uid},
+            {"created_by": uid}
+        ]
+
         inv_q["sales_user_id"] = uid
-    else:
-        # Managers see their team's data, or a specific sales person's data
+
+    elif user["role"] == Roles.MANAGER:
+
+        sales_users = await db.users.find({
+            "created_by": user["user_id"],
+            "role": "SALES"
+        }).to_list(None)
+
+        team_ids = [u["user_id"] for u in sales_users]
+        team_ids.append(user["user_id"])
+
         if sales_user_id:
-            lead_q["$or"] = [{"assigned_to": sales_user_id}, {"created_by": sales_user_id}]
+
+            if sales_user_id not in team_ids:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Unauthorized sales user"
+                )
+
+            lead_q["$or"] = [
+                {"assigned_to": sales_user_id},
+                {"created_by": sales_user_id}
+            ]
+
             inv_q["sales_user_id"] = sales_user_id
+
         else:
-            # Overall team view for manager
-            team_ids = [user["user_id"]]
-            team_users = await db.users.find({"manager_id": user["user_id"]}).to_list(None)
-            team_ids.extend([u["user_id"] for u in team_users])
-            
+
             lead_q["$or"] = [
                 {"assigned_to": {"$in": team_ids}},
                 {"created_by": {"$in": team_ids}}
             ]
+
             inv_q["sales_user_id"] = {"$in": team_ids}
 
+    elif user["role"] == Roles.ADMIN:
+
+        if sales_user_id:
+
+            lead_q["$or"] = [
+                {"assigned_to": sales_user_id},
+                {"created_by": sales_user_id}
+            ]
+
+            inv_q["sales_user_id"] = sales_user_id
+
     leads = [l async for l in db.leads.find(lead_q)]
+
     invs = [i async for i in db.invoices.find(inv_q)]
 
-    # Won by updated_at within range
-    won = [l for l in leads if l.get("pipeline_stage") == "WON" or l.get("status") == "CLOSED"]
-    
-    # Series by day
+    won = [
+        l for l in leads
+        if l.get("pipeline_stage") == "WON"
+        or l.get("status") == "CLOSED"
+    ]
+
     def daykey(dt):
+
         dt = ensure_utc(dt)
+
         return f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}"
-    
+
     series_map = {}
+
     for l in leads:
+
         k = daykey(l.get("created_at"))
-        series_map.setdefault(k, {"date": k, "leads_created": 0, "won": 0, "revenue": 0.0})
+
+        series_map.setdefault(k, {
+            "date": k,
+            "leads_created": 0,
+            "won": 0,
+            "revenue": 0.0
+        })
+
         series_map[k]["leads_created"] += 1
-    
+
     for l in won:
-        k = daykey(l.get("updated_at") or l.get("created_at"))
-        series_map.setdefault(k, {"date": k, "leads_created": 0, "won": 0, "revenue": 0.0})
+
+        k = daykey(
+            l.get("updated_at")
+            or l.get("created_at")
+        )
+
+        series_map.setdefault(k, {
+            "date": k,
+            "leads_created": 0,
+            "won": 0,
+            "revenue": 0.0
+        })
+
         series_map[k]["won"] += 1
-    
+
     for i in invs:
+
         k = daykey(i.get("created_at"))
-        series_map.setdefault(k, {"date": k, "leads_created": 0, "won": 0, "revenue": 0.0})
+
+        series_map.setdefault(k, {
+            "date": k,
+            "leads_created": 0,
+            "won": 0,
+            "revenue": 0.0
+        })
+
         series_map[k]["revenue"] += float(i.get("total", 0))
-    
-    series = [series_map[k] for k in sorted(series_map.keys())]
-    
-    # Per-sales aggregates when requesting overall
+
+    series = [
+        series_map[k]
+        for k in sorted(series_map.keys())
+    ]
+
     by_person = {}
-    if not sales_user_id:
-        for l in leads:
-            s = l.get("assigned_to") or l.get("created_by") or "UNKNOWN"
-            agg = by_person.setdefault(s, {"leads": 0, "won": 0, "revenue": 0.0})
-            agg["leads"] += 1
-        
-        for l in won:
-            s = l.get("assigned_to") or l.get("created_by") or "UNKNOWN"
-            agg = by_person.setdefault(s, {"leads": 0, "won": 0, "revenue": 0.0})
-            agg["won"] += 1
-        
-        for i in invs:
-            s = i.get("sales_user_id") or "UNKNOWN"
-            agg = by_person.setdefault(s, {"leads": 0, "won": 0, "revenue": 0.0})
-            agg["revenue"] += float(i.get("total", 0))
-            
-    return {"series": series, "summary": {"leads": len(leads), "won": len(won), "revenue": round(sum(float(i.get('total',0)) for i in invs),2)}, "by_person": by_person}
+
+    for l in leads:
+
+        s = (
+            l.get("assigned_to")
+            or l.get("created_by")
+            or "UNKNOWN"
+        )
+
+        agg = by_person.setdefault(s, {
+            "leads": 0,
+            "won": 0,
+            "revenue": 0.0
+        })
+
+        agg["leads"] += 1
+
+    for l in won:
+
+        s = (
+            l.get("assigned_to")
+            or l.get("created_by")
+            or "UNKNOWN"
+        )
+
+        agg = by_person.setdefault(s, {
+            "leads": 0,
+            "won": 0,
+            "revenue": 0.0
+        })
+
+        agg["won"] += 1
+
+    for i in invs:
+
+        s = i.get("sales_user_id") or "UNKNOWN"
+
+        agg = by_person.setdefault(s, {
+            "leads": 0,
+            "won": 0,
+            "revenue": 0.0
+        })
+
+        agg["revenue"] += float(i.get("total", 0))
+
+    summary = {
+        "leads": len(leads),
+        "won": len(won),
+        "revenue": round(
+            sum(float(i.get("total", 0)) for i in invs),
+            2
+        )
+    }
+
+    if sales_user_id:
+
+        sales_user = await db.users.find_one({
+            "user_id": sales_user_id
+        })
+
+        summary["username"] = (
+            sales_user.get("username")
+            if sales_user else None
+        )
+
+    else:
+
+        if user["role"] in [Roles.MANAGER, Roles.SALES]:
+            summary["username"] = user.get("username")
+
+        else:
+            summary["username"] = "All Sales"
+
+    return {
+        "series": series,
+        "summary": summary,
+        "by_person": by_person
+    }
 
 
 

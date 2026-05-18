@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+</head>
+
+<body
+  style="
+    margin:0;
+    padding:0;
+    background:#f1f5f9;
+    font-family:Arial,sans-serif;
+  "
+>
+  <table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    style="padding:40px 0;"
+  >
+    <tr>
+      <td align="center">
+
+        <table
+          width="600"
+          cellpadding="0"
+          cellspacing="0"
+          style="
+            background:#ffffff;
+            border-radius:16px;
+            overflow:hidden;
+            box-shadow:0 8px 30px rgba(0,0,0,0.08);
+          "
+        >
+
+          <!-- Header -->
+          <tr>
+            <td
+              style="
+                background:#dc2626;
+                padding:24px;
+                color:white;
+                font-size:24px;
+                font-weight:bold;
+              "
+            >
+              Overdue Follow-up Alert
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px; color:#0f172a;">
+
+              <p style="margin-top:0; font-size:16px;">
+                Hello,
+              </p>
+
+              <p
+                style="
+                  font-size:15px;
+                  line-height:1.7;
+                  color:#334155;
+                "
+              >
+                Your follow-up for
+                <strong>{{lead_name}}</strong>
+                scheduled at
+                <strong>{{followup_time}}</strong>
+                is now overdue.
+              </p>
+
+              <p
+                style="
+                  font-size:15px;
+                  line-height:1.7;
+                  color:#334155;
+                "
+              >
+                Please take immediate action and update the lead status or schedule the next follow-up.
+              </p>
+
+              <table
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                style="
+                  margin-top:24px;
+                  background:#fef2f2;
+                  border:1px solid #fecaca;
+                  border-radius:12px;
+                "
+              >
+                <tr>
+                  <td style="padding:20px;">
+
+                    <p style="margin:0 0 10px 0;">
+                      <strong>Lead:</strong>
+                      {{lead_name}}
+                    </p>
+
+                    <p style="margin:0 0 10px 0;">
+                      <strong>Scheduled Follow-up:</strong>
+                      {{followup_time}}
+                    </p>
+
+                    <p style="margin:0;">
+                      <strong>Status:</strong>
+                      Overdue
+                    </p>
+
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA -->
+              <table
+                cellpadding="0"
+                cellspacing="0"
+                style="margin-top:32px;"
+              >
+                <tr>
+                  <td
+                    align="center"
+                    bgcolor="#dc2626"
+                    style="
+                      border-radius:10px;
+                    "
+                  >
+                    <a
+                      href="{{lead_link}}"
+                      style="
+                        display:inline-block;
+                        padding:14px 24px;
+                        color:#ffffff;
+                        text-decoration:none;
+                        font-weight:600;
+                        font-size:14px;
+                      "
+                    >
+                      Review Lead
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p
+                style="
+                  margin-top:40px;
+                  font-size:13px;
+                  color:#64748b;
+                "
+              >
+                This is an automated overdue reminder from your CRM system.
+              </p>
+
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Literal
 from datetime import datetime
 
-Status = Literal["OPEN","WIP","CLOSED","LOST"]
+Status = Literal["WIP","CLOSED","LOST"]
 Temperature = Literal["COLD","WARM","HOT"]
 Stage = Literal["NEW","CONTACTED","DEMO","PROPOSAL","NEGOTIATION","WON","LOST"]
 
@@ -17,7 +17,7 @@ class LeadBase(BaseModel):
     source: Optional[str] = Field(default=None, max_length=100)
     project_id: str = Field(..., min_length=1)
     purpose: Optional[str] = Field(default=None, max_length=2000)
-    status: Status = "OPEN"
+    status: Status = "WIP"
     temperature: Temperature = "COLD"
     tags: List[str] = Field(default_factory=list)
     expected_value: float = 0.0

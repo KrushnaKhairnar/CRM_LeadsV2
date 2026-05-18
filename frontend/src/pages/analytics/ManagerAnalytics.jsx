@@ -26,7 +26,7 @@ export default function ManagerAnalytics() {
   });
   const { data: users } = useQuery({
     queryKey: ["sales-users"],
-    queryFn: () => UsersAPI.listSales(),
+    queryFn: () => UsersAPI.myTeam(),
   });
 
   const statusData = useMemo(() => {

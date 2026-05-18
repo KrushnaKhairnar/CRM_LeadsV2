@@ -17,7 +17,7 @@ from app.services.email_service import send_email
 
   
 async def scan_and_notify(db):
-    print("Scanning for upcoming follow-ups...")
+  
 
     notif_repo = NotificationsRepository(db)
 
@@ -25,10 +25,6 @@ async def scan_and_notify(db):
 
     window_start = now
     window_end = now + timedelta(minutes=5)
-
-    print("WINDOW START:", window_start)
-    print("WINDOW END:", window_end)
-
     q = {
         "next_followup_at": {
             "$gte": window_start,
@@ -50,15 +46,13 @@ async def scan_and_notify(db):
     async for lead in cur:
 
         try:
-            print("\nFOUND LEAD:", lead)
+         
 
             lead_id = lead["lead_id"]
 
             nfa = lead.get("next_followup_at")
 
-            print("NFA:", nfa)
-            print("TYPE:", type(nfa))
-            print("TZINFO:", nfa.tzinfo if nfa else None)
+       
 
             if not nfa:
                 continue
@@ -101,7 +95,7 @@ async def scan_and_notify(db):
                 })
 
                 if not user:
-                    print("User not found:", uid)
+                  
                     continue
 
                 # Convert UTC -> IST safely
@@ -124,15 +118,12 @@ async def scan_and_notify(db):
 
                 link = f"/leads/{lead_id}"
 
-                print("MESSAGE:", message)
+                
 
                 # Email
                 if user.get("email"):
 
-                    print(
-                        f"Sending email to "
-                        f"{user['email']}"
-                    )
+                  
 
                     await send_email(
                         recipient=user["email"],
@@ -140,7 +131,7 @@ async def scan_and_notify(db):
                         template_name="follow_up_email.html",
                         context={
                             "followup_time": formatted_time,
-                            "lead_name": lead.get("username", ""),
+                            "lead_name": lead.get("name", ""),
                             "lead_link": f"http://localhost:5173/leads/{lead_id}",
                         }
                     )
@@ -154,7 +145,7 @@ async def scan_and_notify(db):
                     "read": False,
                 })
 
-                print("NOTIFICATION CREATED:", notif_id)
+              
 
                 # Websocket
                 await ws_manager.send_json(
@@ -172,7 +163,7 @@ async def scan_and_notify(db):
                     },
                 )
 
-                print("WEBSOCKET SENT")
+              
 
         except Exception as e:
             print("SCAN ERROR:", str(e))
@@ -189,25 +180,28 @@ async def compute_overdue(db):
     - send email to assigned user
     """
 
-    print("Checking overdue leads...")
+  
 
     now = datetime.now(timezone.utc)
 
-    # Get all leads having next_followup_at
-    leads = await db.leads.find({
-        "next_followup_at": {"$ne": None}
-    }).to_list(length=None)
+    cutoff = now - timedelta(minutes=45)
 
-    for lead in leads:
+    leads = db.leads.find({
+        "next_followup_at": {
+            "$lte": cutoff
+        },
+        "status": {
+            "$ne": "closed"
+        }
+    })
+
+    async for lead in leads:
 
         lead_id = lead.get("lead_id")
         nfa = lead.get("next_followup_at")
         status = str(lead.get("status", "")).lower()
 
-        print("\n----------------------------")
-        print("LEAD ID:", lead_id)
-        print("NEXT FOLLOWUP:", nfa)
-        print("STATUS:", status)
+    
 
         if not nfa:
             continue
@@ -218,40 +212,60 @@ async def compute_overdue(db):
 
         # Skip closed leads
         if status == "closed":
-            print("Lead is closed. Skipping...")
             continue
 
         # Check 45 mins completed or not
-        overdue_time = nfa + timedelta(minutes=1)
+        overdue_time = nfa + timedelta(minutes=45)
 
-        print("OVERDUE TIME:", overdue_time)
-        print("CURRENT TIME:", now)
 
-        # If still within 45 mins skip
         if now <= overdue_time:
-            print("45 minutes not completed yet.")
+
+            await db.leads.update_one(
+                {"lead_id": lead_id},
+                {
+                    "$set": {
+                        "is_overdue": False
+                    }
+                }
+            )
+
             continue
 
-        # Mark overdue
-        is_overdue = True
+        fresh_lead = await db.leads.find_one({
+            "lead_id": lead_id
+        })
 
-        # Update lead overdue field
-        await db.leads.update_one(
-            {"lead_id": lead_id},
-            {
-                "$set": {
-                    "is_overdue": is_overdue
+        if not fresh_lead:
+            continue
+
+        latest_nfa = fresh_lead.get("next_followup_at")
+
+        if latest_nfa and latest_nfa.tzinfo is None:
+            latest_nfa = latest_nfa.replace(
+                tzinfo=timezone.utc
+            )
+
+        if latest_nfa != nfa:
+          
+            continue
+
+        # Mark overdue only once
+        if not lead.get("is_overdue"):
+
+            await db.leads.update_one(
+                {"lead_id": lead_id},
+                {
+                    "$set": {
+                        "is_overdue": True
+                    }
                 }
-            }
-        )
+            )
 
-        print("Lead marked overdue.")
 
         # Get assigned user id
         assigned_to = lead.get("assigned_to")
 
         if not assigned_to:
-            print("No assigned user.")
             continue
 
         # Find user from users table
@@ -260,13 +274,11 @@ async def compute_overdue(db):
         })
 
         if not user:
-            print("Assigned user not found.")
             continue
 
         user_email = user.get("email")
 
         if not user_email:
-            print("User email not found.")
             continue
 
         # Prevent duplicate email sending
@@ -277,7 +289,6 @@ async def compute_overdue(db):
         })
 
         if already_sent:
-            print("Overdue email already sent.")
             continue
 
         # Convert follow-up time to IST
@@ -286,13 +297,12 @@ async def compute_overdue(db):
 
         formatted_time = ist_time.strftime("%d %b %Y, %I:%M %p")
 
-        print(f"Sending overdue email to {user_email}")
 
         # Send email
         await send_email(
             recipient=user_email,
             subject="Overdue Follow-up Reminder",
-            template_name="follow_up_email.html",
+            template_name="overdue_email.html",
             context={
                 "lead_name": lead.get("name", ""),
                 "followup_time": formatted_time,
@@ -310,10 +320,6 @@ async def compute_overdue(db):
             "created_at": now,
             "type": "overdue"
         })
-
-        print("Overdue email sent successfully.")
-
-    print("\nOverdue checking completed.")
 
 def create_scheduler(db):
     sched = AsyncIOScheduler()

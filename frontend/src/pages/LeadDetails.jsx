@@ -8,6 +8,25 @@ import { LeadsAPI, UsersAPI } from "../api/endpoints";
 import { useAuthStore } from "../auth/store";
 import Badge from "../components/Badge";
 
+const formatISTDate = (value) => {
+  if (!value) return "-";
+
+  try {
+    return new Date(
+      typeof value === "string" && !value.endsWith("Z") ? value + "Z" : value,
+    ).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return "-";
+  }
+};
 export default function LeadDetails() {
   const { id } = useParams();
   const qc = useQueryClient();
@@ -19,11 +38,15 @@ export default function LeadDetails() {
     queryKey: ["lead", id],
     queryFn: () => LeadsAPI.get(id),
   });
+
+
+
   const { data: products } = useQuery({
     queryKey: ["products", id],
     queryFn: () => LeadsAPI.listProducts(id),
     enabled: !!id,
   });
+  
   const { data: followups } = useQuery({
     queryKey: ["followups", id],
     queryFn: () => LeadsAPI.followups(id),
@@ -34,6 +57,7 @@ export default function LeadDetails() {
     queryFn: () => LeadsAPI.audit(id),
     enabled: !!id,
   });
+
   const actorIds = useMemo(() => {
     const s = new Set();
     if (lead?.assigned_to) s.add(lead.assigned_to);
@@ -53,12 +77,12 @@ export default function LeadDetails() {
   const nameOf = (id) =>
     (actors || []).find((u) => u.user_id === id)?.username ||
     (id ? id.slice(-6) : "—");
+
   const { data: salesUsers } = useQuery({
     queryKey: ["my-team"],
     queryFn: () => UsersAPI.myTeam(),
     enabled: isManager,
   });
-  // const { data: salesUsers } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales(), enabled: isManager })
 
   const [openFU, setOpenFU] = useState(null);
   const [openProduct, setOpenProduct] = useState(false);
@@ -151,7 +175,14 @@ export default function LeadDetails() {
   };
 
   function DateTimePickerField({ value, onSave }) {
-    const [selectedDate, setSelectedDate] = useState(value || "");
+    const [selectedDate, setSelectedDate] = useState(
+      value ? value.slice(0, 16) : "",
+    );
+
+    // IMPORTANT
+    useEffect(() => {
+      setSelectedDate(value ? value.slice(0, 16) : "");
+    }, [value]);
 
     return (
       <div className="relative w-full">
@@ -159,8 +190,18 @@ export default function LeadDetails() {
           type="datetime-local"
           className="w-full border rounded-lg px-3 py-2 pr-10"
           value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          onBlur={() => onSave(selectedDate)}
+          onChange={(e) => {
+            // show selected IST time immediately
+            setSelectedDate(e.target.value);
+          }}
+          onBlur={() => {
+            // convert IST/local to UTC for backend
+            const utcDate = selectedDate
+              ? new Date(selectedDate).toISOString()
+              : null;
+
+            onSave(utcDate);
+          }}
         />
       </div>
     );
@@ -168,8 +209,12 @@ export default function LeadDetails() {
 
   const fuSeries = useMemo(() => {
     const arr = (followups || []).map((f) => ({
-      date: new Date(f.done_at).toLocaleDateString("en-GB"),
-      time: new Date(f.done_at).toLocaleTimeString("en-GB", {
+      date: new Date(
+        f.done_at?.endsWith("Z") ? f.done_at : f.done_at + "Z",
+      ).toLocaleDateString("en-GB"),
+      time: new Date(
+        f.done_at?.endsWith("Z") ? f.done_at : f.done_at + "Z",
+      ).toLocaleTimeString("en-GB", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
@@ -253,11 +298,7 @@ export default function LeadDetails() {
             <Row label="Next Followup">
               <span>
                 {lead.next_followup_at
-                  ? new Date(
-                      lead.next_followup_at.endsWith("Z")
-                        ? lead.next_followup_at
-                        : lead.next_followup_at + "Z",
-                    ).toLocaleString("en-GB", {
+                  ? new Date(lead.next_followup_at).toLocaleString("en-GB", {
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
@@ -281,9 +322,7 @@ export default function LeadDetails() {
             </Row>
             <Row label="Assigned At">
               <span>
-                {lead.assigned_at
-                  ? new Date(lead.assigned_at).toLocaleString("en-GB")
-                  : "-"}
+                {lead.assigned_at ? formatISTDate(lead.assigned_at) : "-"}
               </span>
             </Row>
             <div>
@@ -330,7 +369,6 @@ export default function LeadDetails() {
                   patchMutation.mutate({ status: e.target.value })
                 }
               >
-                <option value="OPEN">OPEN</option>
                 <option value="WIP">WIP</option>
                 <option value="CLOSED">CLOSED</option>
                 <option value="LOST">LOST</option>
@@ -377,16 +415,12 @@ export default function LeadDetails() {
             <Field label="Next Followup">
               <DateTimePickerField
                 value={nextFollowup}
-                onSave={(date) => {
+                onSave={(utcDate) => {
                   if (isAdmin) return;
 
-                  console.log("Selected Date:", date);
-
-                  const utcDate = date ? new Date(date).toISOString() : null;
-
-                  console.log("UTC Date:", utcDate);
-
-                  setNextFollowup(date || "");
+                  setNextFollowup(
+                    utcDate ? new Date(utcDate).toISOString().slice(0, 16) : "",
+                  );
 
                   patchMutation.mutate({
                     next_followup_at: utcDate,
@@ -514,7 +548,11 @@ export default function LeadDetails() {
                 {f.next_followup_at && (
                   <div className="text-xs text-slate-500 mt-2">
                     Next:{" "}
-                    {new Date(f.next_followup_at + "Z")
+                    {new Date(
+                      f.next_followup_at?.endsWith("Z")
+                        ? f.next_followup_at
+                        : f.next_followup_at + "Z",
+                    )
                       .toLocaleString("en-GB", {
                         day: "2-digit",
                         month: "2-digit",
@@ -536,65 +574,55 @@ export default function LeadDetails() {
         </Panel>
 
         <Panel title="Audit Log">
-          {" "}
-          <div className="space-y-5">
-            {" "}
+          <div className="max-h-[520px] overflow-y-auto pr-1 space-y-3">
             {(audit || []).map((a) => (
               <div
                 key={a._id}
-                className="group bg-white border border-slate-200 rounded-2xl px-3 py-2 shadow-sm hover:shadow-md transition"
+                className="bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200"
               >
-                {" "}
-                {/* Header */}{" "}
-                <div className="flex items-start justify-between">
-                  {" "}
-                  <div className="flex items-start gap-3">
-                    {" "}
-                    <div className="mt-1.5 w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-blue-100" />{" "}
-                    <div>
-                      {" "}
-                      <div className="text-sm font-semibold text-slate-900">
-                        {" "}
-                        {a.action}{" "}
-                      </div>{" "}
-                      <div className="text-xs text-slate-500 mt-1">
-                        {" "}
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5 min-w-0">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-indigo-500 shrink-0" />
+
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-slate-800 truncate">
+                        {a.action}
+                      </div>
+
+                      <div className="text-[11px] text-slate-500 mt-0.5">
                         by{" "}
                         <span className="font-medium text-slate-700">
-                          {" "}
-                          {nameOf(a.actor_id)}{" "}
-                        </span>{" "}
-                      </div>{" "}
-                    </div>{" "}
-                  </div>{" "}
-                  <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
-                    {" "}
-                    {new Date().toLocaleDateString("en-GB")}{" "}
-                    {new Date().toLocaleTimeString("en-GB", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}{" "}
-                  </div>{" "}
-                </div>{" "}
-                {/* Diff */}{" "}
-                <AuditDiff before={a.before || {}} after={a.after || {}} />{" "}
+                          {nameOf(a.actor_id)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md whitespace-nowrap">
+                    {formatISTDate(
+                      a.after?.updated_at || a.updated_at || a.created_at,
+                    )}
+                  </div>
+                </div>
+
+                {/* Diff */}
+                <AuditDiff before={a.before || {}} after={a.after || {}} />
               </div>
-            ))}{" "}
+            ))}
+
             {(audit || []).length === 0 && (
-              <div className="py-14 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50">
-                {" "}
+              <div className="py-10 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50">
                 <div className="text-sm font-medium text-slate-600">
-                  {" "}
-                  No audit activity{" "}
-                </div>{" "}
+                  No audit activity
+                </div>
+
                 <div className="text-xs text-slate-400 mt-1">
-                  {" "}
-                  Changes will appear here{" "}
-                </div>{" "}
+                  Changes will appear here
+                </div>
               </div>
-            )}{" "}
-          </div>{" "}
+            )}
+          </div>
         </Panel>
       </div>
 
@@ -752,10 +780,8 @@ function Notes({ lead, onAdd, nameOf }) {
         {notes.map((n, i) => (
           <div key={i} className="border rounded-xl p-3">
             <div className="text-xs text-slate-500">
-              {n.created_at
-                ? new Date(n.created_at).toLocaleString("en-GB")
-                : ""}{" "}
-              • {nameOf(n.author_id)}
+              {n.created_at ? formatISTDate(n.created_at) : ""} •{" "}
+              {nameOf(n.author_id)}
             </div>
             <div className="text-sm mt-1 whitespace-pre-wrap">{n.text}</div>
           </div>
@@ -767,6 +793,74 @@ function Notes({ lead, onAdd, nameOf }) {
     </div>
   );
 }
+
+// function AuditDiff({ before, after }) {
+//   const keys = Array.from(
+//     new Set([...Object.keys(before || {}), ...Object.keys(after || {})]),
+//   );
+
+//   const rows = keys
+//     .map((k) => {
+//       const b = before?.[k];
+//       const a = after?.[k];
+
+//       if (JSON.stringify(b) === JSON.stringify(a)) return null;
+
+//       return { k, b, a };
+//     })
+//     .filter(Boolean);
+
+//   if (rows.length === 0) return null;
+
+//   const formatValue = (key, value) => {
+//     if (!value) return "-";
+
+//     const dateFields = [
+//       "done_at",
+//       "next_followup_at",
+//       "created_at",
+//       "updated_at",
+//     ];
+
+//     if (dateFields.includes(key)) {
+//       return new Date(value).toLocaleString("en-IN", {
+//         timeZone: "Asia/Kolkata",
+//         day: "2-digit",
+//         month: "2-digit",
+//         year: "numeric",
+//         hour: "2-digit",
+//         minute: "2-digit",
+//         hour12: true,
+//       });
+//     }
+
+//     return value;
+//   };
+
+//   return (
+//     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 divide-y divide-slate-200">
+//       {rows.map((r, i) => (
+//         <div key={i} className="grid grid-cols-2  gap-4 px-2 py-1.5">
+//           {/* Field */}
+//           <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+//             {r.k}
+//           </div>
+
+//           {/* Values */}
+//           <div className="space-y-2">
+//             {r.k === "products" ? (
+//               <ProductStatusDiff before={r.b} after={r.a} />
+//             ) : (
+//               <>
+//                 <DiffBox label=" " value={formatValue(r.k, r.a)} type="after" />
+//               </>
+//             )}
+//           </div>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// }
 
 function AuditDiff({ before, after }) {
   const keys = Array.from(
@@ -787,76 +881,57 @@ function AuditDiff({ before, after }) {
   if (rows.length === 0) return null;
 
   const formatValue = (key, value) => {
-    if (!value) return "-";
+    if (value === null || value === undefined || value === "") {
+      return "-";
+    }
 
     const dateFields = [
       "done_at",
       "next_followup_at",
       "created_at",
       "updated_at",
+      "assigned_at",
     ];
 
     if (dateFields.includes(key)) {
-      return new Date(value)
-        .toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-        .replace(",", "");
+      return formatISTDate(value);
     }
 
-    return value;
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
+
+    return String(value);
   };
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 divide-y divide-slate-200">
-      {rows.map((r, i) => (
-        <div
-          key={i}
-          className="grid grid-cols-2  gap-4 px-2 py-1.5"
-        >
-          {/* Field */}
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-            {r.k}
+    <div className="mt-2 rounded-lg border border-slate-200 bg-white overflow-hidden">
+      {/* Header */}
+      <div className="grid grid-cols-2 bg-slate-50 border-b border-slate-200 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 sticky top-0">
+        <div>Field</div>
+        <div>Updated Value</div>
+      </div>
+
+      {/* Body */}
+      <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
+        {rows.map((r, i) => (
+          <div
+            key={i}
+            className="grid grid-cols-2 gap-3 px-3 py-2 hover:bg-slate-50 transition"
+          >
+            <div className="text-[11px] font-medium text-slate-600 break-words">
+              {r.k.replaceAll("_", " ")}
+            </div>
+
+            <div className="text-xs text-slate-800 break-words">
+              {r.k === "products" ? (
+                <ProductStatusDiff before={r.b} after={r.a} />
+              ) : (
+                formatValue(r.k, r.a)
+              )}
+            </div>
           </div>
-
-          {/* Values */}
-          <div className="space-y-2">
-            {r.k === "products" ? (
-              <ProductStatusDiff before={r.b} after={r.a} />
-            ) : (
-              <>
-                <DiffBox label=" " value={formatValue(r.k, r.a)} type="after" />
-              </>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function DiffBox({ label, value, type }) {
-  const isBefore = type === "before";
-
-  return (
-    <div className="flex items-start gap-2 ">
-      <span className="text-[11px] text-slate-400 w-10 mt-1 shrink-0">
-        {label}
-      </span>
-
-      <div
-        className={`px-3 py-0.5 rounded-lg border text-xs leading-relaxed ${
-          isBefore
-            ? "bg-red-50 border-red-100 text-red-700"
-            : "bg-emerald-50 border-emerald-100 text-emerald-700"
-        }`}
-      >
-        {renderDiffValue(value)}
+        ))}
       </div>
     </div>
   );

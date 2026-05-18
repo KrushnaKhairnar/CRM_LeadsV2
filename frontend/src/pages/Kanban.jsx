@@ -27,7 +27,7 @@ export default function Kanban() {
       q: q || undefined,
     })
   })
-  const { data: salesUsers } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.listSales(), enabled: isManager })
+  const { data: salesUsers } = useQuery({ queryKey: ['sales-users'], queryFn: () => UsersAPI.myTeam(), enabled: isManager })
 
   let leads = leadsRes?.items || []
   if (isManager && mineOnly) {
