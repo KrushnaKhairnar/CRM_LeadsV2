@@ -27,10 +27,10 @@ class LeadsService:
         if nfa.tzinfo is None:
             nfa = nfa.replace(tzinfo=timezone.utc)
 
-            now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
 
     # same logic as followup_notifier.py
-            overdue_time = nfa + timedelta(minutes=1)
+        overdue_time = nfa + timedelta(minutes=1)
 
         lead["is_overdue"] = now > overdue_time
 

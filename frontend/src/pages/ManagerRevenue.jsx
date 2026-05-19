@@ -96,12 +96,12 @@ export default function ManagerRevenue() {
             <option value="PAID">PAID</option>
             <option value="OVERDUE">OVERDUE</option>
           </select>
-          <input
+          {/* <input
             className="text-sm w-24"
             placeholder="Currency"
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
-          />
+          /> */}
         </div>
       </div>
 

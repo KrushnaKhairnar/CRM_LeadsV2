@@ -27,6 +27,26 @@ import {
 import RegisterUserModal from "./components/RegisterUserModal";
 import { useAuthStore } from "../auth/store";
 
+const formatISTDate = (value) => {
+  if (!value) return "-";
+
+  try {
+    return new Date(
+      typeof value === "string" && !value.endsWith("Z") ? value + "Z" : value,
+    ).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return "-";
+  }
+};
+
 export default function ManagerDashboard() {
   const qc = useQueryClient();
   const [days, setDays] = useState(30);
@@ -317,18 +337,7 @@ export default function ManagerDashboard() {
                   <td>{l.company || "-"}</td>
                   <td>{l.status}</td>
                   <td>
-                    {l.next_followup_at
-                      ? new Date(l.next_followup_at)
-                          .toLocaleString("en-GB", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })
-                          .replace(",", "")
-                      : "-"}
+                    {formatISTDate(l.next_followup_at) || "-"}
                   </td>
                   <td className="text-right">
                     <Link

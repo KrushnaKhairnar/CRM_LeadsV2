@@ -6,6 +6,26 @@ import Badge from "../components/Badge";
 import CreateLeadModal from "./components/CreateLeadModal";
 import { CheckCircle2, Clock3, Plus, Target, TrendingDown } from "lucide-react";
 
+const formatISTDate = (value) => {
+  if (!value) return "-";
+
+  try {
+    return new Date(
+      typeof value === "string" && !value.endsWith("Z") ? value + "Z" : value,
+    ).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return "-";
+  }
+};
+
 export default function SalesDashboard() {
   const { data } = useQuery({
     queryKey: ["leads-sales", { page: 1 }],
@@ -37,12 +57,12 @@ export default function SalesDashboard() {
     <div className="space-y-6 animate-in-up">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-        <div className="text-2xl font-extrabold tracking-tight text-slate-950">
-          Sales Dashboard
-        </div>
-        <div className="text-sm text-slate-500 mt-1">
-          Your assigned/created leads and followups
-        </div>
+          <div className="text-2xl font-extrabold tracking-tight text-slate-950">
+            Sales Dashboard
+          </div>
+          <div className="text-sm text-slate-500 mt-1">
+            Your assigned/created leads and followups
+          </div>
         </div>
         <div>
           <button
@@ -55,10 +75,34 @@ export default function SalesDashboard() {
       </div>
 
       <div className="grid md:grid-cols-4 gap-4">
-        <Card tone="blue" icon={<Target size={18} />} title="My Leads (30d)" value={ana?.total ?? "-"} hint="Assigned / created" />
-        <Card tone="green" icon={<CheckCircle2 size={18} />} title="Won" value={ana?.won ?? "-"} hint="Closed successfully" />
-        <Card tone="rose" icon={<TrendingDown size={18} />} title="Lost" value={ana?.lost ?? "-"} hint="Lost opportunities" />
-        <Card tone="orange" icon={<Clock3 size={18} />} title="Overdue" value={ana?.overdue ?? "-"} hint="Needs followup" />
+        <Card
+          tone="blue"
+          icon={<Target size={18} />}
+          title="My Leads (30d)"
+          value={ana?.total ?? "-"}
+          hint="Assigned / created"
+        />
+        <Card
+          tone="green"
+          icon={<CheckCircle2 size={18} />}
+          title="Won"
+          value={ana?.won ?? "-"}
+          hint="Won successfully"
+        />
+        <Card
+          tone="rose"
+          icon={<TrendingDown size={18} />}
+          title="Lost"
+          value={ana?.lost ?? "-"}
+          hint="Lost opportunities"
+        />
+        <Card
+          tone="orange"
+          icon={<Clock3 size={18} />}
+          title="Overdue"
+          value={ana?.overdue ?? "-"}
+          hint="Needs followup"
+        />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
@@ -75,7 +119,7 @@ export default function SalesDashboard() {
               >
                 <div className="font-medium">{l.name}</div>
                 <div className="text-xs text-slate-500">
-                  {new Date(l.next_followup_at).toLocaleString("en-GB")}
+                   {formatISTDate(l.next_followup_at)}
                 </div>
               </Link>
             ))}
@@ -98,7 +142,7 @@ export default function SalesDashboard() {
                 <div className="font-medium">{l.name}</div>
                 <div className="text-xs text-rose-700">
                   Overdue since{" "}
-                  {new Date(l.next_followup_at).toLocaleString("en-GB")}
+                   {formatISTDate(l.next_followup_at)}
                 </div>
               </Link>
             ))}
@@ -136,20 +180,7 @@ export default function SalesDashboard() {
                       <span className="text-slate-400">—</span>
                     )}
                   </td>
-                  <td>
-                    {l.next_followup_at
-                      ? new Date(l.next_followup_at)
-                          .toLocaleString("en-GB", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })
-                          .replace(",", "")
-                      : "-"}
-                  </td>
+                  <td>{formatISTDate(l.next_followup_at)}</td>
                   <td className="text-right">
                     <Link
                       className="text-brand-700 underline decoration-brand-400 underline-offset-4"
@@ -182,11 +213,15 @@ function Card({ title, value, hint, icon, tone = "blue" }) {
   };
 
   return (
-    <div className={`crm-card crm-card-hover p-4 ${tones[tone]?.split(" ")[0] || ""}`}>
+    <div
+      className={`crm-card crm-card-hover p-4 ${tones[tone]?.split(" ")[0] || ""}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-xs font-medium text-slate-600">{title}</div>
-          <div className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">{value}</div>
+          <div className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">
+            {value}
+          </div>
           <div className="mt-1 text-[11px] text-slate-500">{hint}</div>
         </div>
         <div className={`rounded-xl p-2 ring-1 ${tones[tone] || tones.blue}`}>

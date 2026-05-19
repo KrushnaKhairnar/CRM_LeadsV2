@@ -247,7 +247,7 @@ async def revenue_manager(
             return float(x or 0) 
         except: 
             return 0.0
-    won_from_leads = sum(ev(l.get("expected_value")) for l in leads if (l.get("pipeline_stage")=="WON" or l.get("status")=="CLOSED"))
+    won_from_leads = sum(ev(l.get("expected_value")) for l in leads if (l.get("pipeline_stage")=="WON"))
     pipeline_open = sum(ev(l.get("expected_value")) for l in leads if l.get("status") in "WIP")
     series = [{"date": k, "total": round(v,2)} for k,v in sorted(buckets.items())]
     return {
@@ -503,7 +503,7 @@ async def sales_me(
     leads = [l async for l in db.leads.find(q)]
 
     by_stage = Counter([l.get("pipeline_stage") or "NONE" for l in leads])
-    won = sum(1 for l in leads if l.get("pipeline_stage") == "WON" or l.get("status") == "CLOSED")
+    won = sum(1 for l in leads if l.get("pipeline_stage") == "WON")
     lost = sum(1 for l in leads if l.get("pipeline_stage") == "LOST" or l.get("status") == "LOST")
 
     now = datetime.now(timezone.utc)
