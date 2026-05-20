@@ -119,7 +119,7 @@ export default function MyTeam() {
                   onClick={() => toggleStatus(member)}
                   disabled={updatingId === member.user_id}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                    member.is_active ? 'bg-green-500' : 'bg-red-500'
+                    member.is_active ? 'bg-brand-500' : 'bg-red-500'
                   } disabled:opacity-50`}
                 >
                   <span
@@ -151,7 +151,7 @@ export default function MyTeam() {
               {/* Status Text */}
               <p className="mt-4 text-sm font-medium">
                 Status:{' '}
-                <span className={member.is_active ? 'text-green-600' : 'text-red-600'}>
+                <span className={member.is_active ? '  text-brand-600' : 'text-red-600'}>
                   {updatingId === member.user_id
                     ? 'Updating...'
                     : member.is_active

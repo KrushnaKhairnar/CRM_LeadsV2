@@ -236,19 +236,52 @@ async def revenue_manager(
     # - won_from_leads: sum of expected_value for WON or CLOSED leads updated in period
     # - pipeline_open: sum of expected_value for WIP leads (pipeline) created or updated in period
     lead_q: dict = {
-        "$or": [{"updated_at": {"$gte": start_naive}}, {"created_at": {"$gte": start_naive}}],
-        "assigned_to": {"$in": team_ids}
-    }
+    "$and": [
+        {
+            "$or": [
+                {"updated_at": {"$gte": start_naive}},
+                {"created_at": {"$gte": start_naive}}
+            ]
+        }
+    ]
+}
+
     if sales_user_id:
-        lead_q["$or"] = lead_q.get("$or", []) + [{"assigned_to": sales_user_id}, {"created_by": sales_user_id}]
+
+        lead_q["$and"].append({
+            "$or": [
+                {"assigned_to": sales_user_id},
+                {"created_by": sales_user_id}
+            ]
+        })
+
+    else:
+
+        lead_q["$and"].append({
+            "$or": [
+                {"assigned_to": {"$in": team_ids}},
+                {"created_by": {"$in": team_ids}}
+            ]
+        })
+    
     leads = [l async for l in db.leads.find(lead_q)]
     def ev(x): 
         try: 
             return float(x or 0) 
         except: 
             return 0.0
-    won_from_leads = sum(ev(l.get("expected_value")) for l in leads if (l.get("pipeline_stage")=="WON"))
-    pipeline_open = sum(ev(l.get("expected_value")) for l in leads if l.get("status") in "WIP")
+    
+    won_from_leads = sum(
+    ev(l.get("expected_value"))
+    for l in leads
+    if l.get("pipeline_stage") == "WON"
+)
+    pipeline_open = sum(
+    ev(l.get("expected_value"))
+    for l in leads
+    if l.get("status") == "WIP"
+)
+    # pipeline_open = sum(ev(l.get("expected_value")) for l in leads if l.get("status") in "WIP")
     series = [{"date": k, "total": round(v,2)} for k,v in sorted(buckets.items())]
     return {
         "total_all": round(total_all,2),

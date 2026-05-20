@@ -78,7 +78,7 @@ export default function ManagerRevenue() {
             value={sales}
             onChange={(e) => setSales(e.target.value)}
           >
-            <option value="">All Sales</option>
+            <option value="">Manager</option>
             {(salesUsers || []).map((u) => (
               <option key={u.user_id} value={u.user_id}>
                 {u.username}
@@ -123,10 +123,10 @@ export default function ManagerRevenue() {
           value={(data?.won_from_leads ?? 0).toLocaleString("en-GB")}
         />
         <Card
-          title="Pipeline Open (period)"
+          title="Pipeline WIP (period)"
           value={(data?.pipeline_open ?? 0).toLocaleString("en-GB")}
         />
-        <Card title="Active currency" value={currency || "All"} />
+        {/* <Card title="Active currency" value={currency || "All"} /> */}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
@@ -183,16 +183,17 @@ export default function ManagerRevenue() {
           </div>
         </Panel>
         <Panel title="By Person">
-          <div className="h-64">
+          <div className=" h-64 ">
             <ResponsiveContainer>
-              <PieChart width={340} height={300}>
+              <PieChart width={350} height={300}>
                 <Pie
+                  
                   data={bySalesData || []}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={90}
+                  outerRadius={82}
                   paddingAngle={2}
                   stroke="#ffffff"
                   strokeWidth={3}
@@ -242,7 +243,7 @@ function Card({ title, value }) {
 }
 function Panel({ title, children }) {
   return (
-    <div className="bg-white border rounded-2xl p-4 shadow-soft transition hover:shadow-hover">
+    <div className="bg-white border rounded-2xl p-4  shadow-soft transition hover:shadow-hover">
       <div className="font-medium">{title}</div>
       <div className="mt-3">{children}</div>
     </div>
