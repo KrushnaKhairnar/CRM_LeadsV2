@@ -3,7 +3,7 @@ import { useAuthStore } from "../../auth/store";
 import { toast } from "sonner";
 import { useNotificationsStore } from "./store";
 
-import notificationSound from "./followupNotificationSound.mp3";
+import snotificationSound from "./notificationsound.mp3";
 import notificationIcon from './notification.png';
 
 
